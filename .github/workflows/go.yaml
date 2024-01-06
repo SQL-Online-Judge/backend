@@ -1,0 +1,39 @@
+name: Go CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+
+  build:
+    name: Go Build
+    runs-on: self-hosted
+    steps:
+      - name: Setup Go 1.21
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
+
+      - name: Build
+        run: go build -v .
+
+      # - name: Test
+        # run: go test -v ./...
