@@ -1,3 +1,3 @@
 module github.com/SQL-Online-Judge/core
 
-go 1.21.5
+go 1.21
