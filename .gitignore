@@ -19,3 +19,7 @@
 
 # Go workspace file
 go.work
+
+# VS Code & plugins
+.vscode/
+.history/
