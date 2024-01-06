@@ -23,3 +23,6 @@ go.work
 # VS Code & plugins
 .vscode/
 .history/
+
+# Built binaries
+core
