@@ -1,7 +1,9 @@
 package main
 
-import "log"
+import (
+	"github.com/SQL-Online-Judge/core/logger"
+)
 
 func main() {
-	log.Println("Hello, World!")
+	logger.Logger.Info("Hello, World!")
 }

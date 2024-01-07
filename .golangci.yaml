@@ -1,6 +1,10 @@
 linters:
   enable-all: true
   disable:
+    # unused linters
+    - depguard
+    - gochecknoglobals
+    - gochecknoinits
     # deprecated linters
     - varcheck
     - interfacer

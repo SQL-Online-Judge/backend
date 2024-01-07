@@ -16,6 +16,9 @@ build:
 	$(GOBUILD) -o $(BINARY_NAME) -v
 test:
 	$(GOTEST) -v ./...
-run:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./...
+run: clean
+	$(GOBUILD) -o $(BINARY_NAME) -v main.go
 	./$(BINARY_NAME)
+debug: clean
+	$(GOBUILD) -o $(BINARY_NAME) -v main.go
+	./$(BINARY_NAME) -l debug
