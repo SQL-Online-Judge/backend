@@ -4,6 +4,7 @@ GOBUILD=$(GOCMD) build
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOLINT=golangci-lint
+PROJECT_NAME=SQL-Online-Judge
 BINARY_NAME=core
 
 all: lint build test
@@ -22,3 +23,5 @@ run: clean
 debug: clean
 	$(GOBUILD) -o $(BINARY_NAME) -v main.go
 	./$(BINARY_NAME) -l debug
+docker-build:
+	docker build -t $(PROJECT_NAME)/$(BINARY_NAME) .

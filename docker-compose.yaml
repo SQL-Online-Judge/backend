@@ -1,0 +1,35 @@
+# only for development
+# use repo SQL-Online-Judge/deploy for production
+
+version: '3'
+
+services:
+  mongo:
+    image: mongo:7
+    restart: always
+    volumes:
+      - dev_mongodata:/data/db
+    ports:
+      - 27017:27017
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - 6379:6379
+
+  core:
+    build: .
+    image: SQL-Online-Judge/core
+    restart: on-failure
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/sqloj
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - 3000:3000
+
+volumes:
+  dev_mongodata:
