@@ -5,23 +5,20 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOLINT=golangci-lint
 PROJECT_NAME=SQL-Online-Judge
-BINARY_NAME=core
+SERVICES=core judger
+OUT_DIR=./bin
 
-all: lint build test
+all: clean lint $(addprefix $(OUT_DIR)/, $(SERVICES)) test
 clean:
 	$(GOCMD) clean
-	rm -f $(BINARY_NAME)
+	rm -rf $(OUT_DIR)
 lint:
 	$(GOLINT) run ./...
-build:
-	$(GOBUILD) -o $(BINARY_NAME) -v
+$(OUT_DIR)/%: clean
+	$(GOBUILD) -o $(OUT_DIR)/$* -v ./cmd/$*
 test:
 	$(GOTEST) -v ./...
-run: clean
-	$(GOBUILD) -o $(BINARY_NAME) -v main.go
-	./$(BINARY_NAME)
-debug: clean
-	$(GOBUILD) -o $(BINARY_NAME) -v main.go
-	./$(BINARY_NAME) -l debug
-docker-build:
-	docker build -t $(PROJECT_NAME)/$(BINARY_NAME) .
+debug:
+	docker compose down
+	docker compose build
+	docker compose up

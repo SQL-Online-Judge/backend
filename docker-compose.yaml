@@ -19,8 +19,10 @@ services:
       - 6379:6379
 
   core:
-    build: .
-    image: SQL-Online-Judge/core
+    build:
+      context: ./
+      dockerfile: ./cmd/core/Dockerfile
+    image: SQL-Online-Judge/backend/core
     restart: on-failure
     environment:
       - MONGO_URI=mongodb://mongo:27017/sqloj

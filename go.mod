@@ -1,4 +1,4 @@
-module github.com/SQL-Online-Judge/core
+module github.com/SQL-Online-Judge/backend
 
 go 1.21
 

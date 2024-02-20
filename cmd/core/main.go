@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/SQL-Online-Judge/core/logger"
+	"github.com/SQL-Online-Judge/backend/internal/pkg/logger"
 )
 
 func main() {

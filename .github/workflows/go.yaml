@@ -17,6 +17,7 @@ jobs:
   build:
     name: Go Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +36,7 @@ jobs:
           skip-cache: true
 
       - name: Go build
-        run: go build -v .
+        run: go build -v ./cmd/core && go build -v ./cmd/judger
 
       # - name: Test
         # run: go test -v ./...
@@ -48,7 +49,7 @@ jobs:
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 10
     permissions:
       actions: read
       contents: read
