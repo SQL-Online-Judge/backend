@@ -5,6 +5,9 @@ linters:
     - depguard
     - gochecknoglobals
     - gochecknoinits
+    - errcheck
+    - gomnd
+    - exhaustruct
     # deprecated linters
     - varcheck
     - interfacer

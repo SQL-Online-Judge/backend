@@ -26,3 +26,6 @@ go.work
 
 # Built binaries
 bin/
+
+# config and environment files
+configs/core.env

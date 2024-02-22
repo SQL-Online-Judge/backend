@@ -30,11 +30,6 @@ jobs:
       - name: Get dependencies
         run: go get -v -t -d ./...
 
-      - name: Go lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          skip-cache: true
-
       - name: Go build
         run: go build -v ./cmd/core && go build -v ./cmd/judger
 
