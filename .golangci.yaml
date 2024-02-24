@@ -8,6 +8,9 @@ linters:
     - errcheck
     - gomnd
     - exhaustruct
+    - gofumpt
+    - wsl
+    - nlreturn
     # deprecated linters
     - varcheck
     - interfacer

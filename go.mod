@@ -3,7 +3,9 @@ module github.com/SQL-Online-Judge/backend
 go 1.21
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/go-chi/chi/v5 v5.0.12
+	github.com/redis/go-redis/v9 v9.5.1
 	github.com/spf13/pflag v1.0.5
 	go.mongodb.org/mongo-driver v1.14.0
 	go.uber.org/zap v1.26.0
@@ -12,13 +14,9 @@ require (
 require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-)
-
-require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
-	github.com/redis/go-redis/v9 v9.5.1
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
