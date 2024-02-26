@@ -143,3 +143,7 @@ func (m *MongoDB) CreateIndex(collectionName, fieldName string, unique bool) err
 func GetMongo() *MongoDB {
 	return Mongo
 }
+
+func GetMongoDB() *mongo.Database {
+	return Mongo.GetDB()
+}
