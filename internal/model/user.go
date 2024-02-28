@@ -25,8 +25,29 @@ func NewEmptyUser() *User {
 	}
 }
 
+func (u *User) IsValidUsername() bool {
+	return len(u.Username) >= 2 && len(u.Username) <= 32
+}
+
 func (u *User) IsValidPassword() bool {
-	return len(u.Password) >= 8
+	return len(u.Password) >= 8 && len(u.Password) <= 64
+}
+
+func (u *User) IsValidLogin() bool {
+	return u.IsValidUsername() && u.IsValidPassword()
+}
+
+func (u *User) IsValidRole() bool {
+	switch u.Role {
+	case "admin", "teacher", "student":
+		return true
+	default:
+		return false
+	}
+}
+
+func (u *User) IsValidUser() bool {
+	return u.IsValidUsername() && u.IsValidPassword() && u.IsValidRole()
 }
 
 func (u *User) HashPassword() error {

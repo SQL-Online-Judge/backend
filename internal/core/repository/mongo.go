@@ -42,7 +42,7 @@ func (mr *MongoRepository) CreateUser(user *model.User) error {
 
 	_, err := mr.db.Collection("user").InsertOne(ctx, user)
 	if err != nil {
-		logger.Logger.Error("failed to create user", zap.Error(err))
+		logger.Logger.Error("failed to create user", zap.String("username", user.Username), zap.Error(err))
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
@@ -58,7 +58,7 @@ func (mr *MongoRepository) GetUserByUsername(username string) (*model.User, erro
 	filter := bson.D{{Key: "username", Value: username}}
 	err := mr.db.Collection("user").FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		logger.Logger.Error("failed to get user by username", zap.Error(err))
+		logger.Logger.Error("failed to get user by username", zap.String("username", username), zap.Error(err))
 		return nil, fmt.Errorf("failed to get user by username: %w", err)
 	}
 

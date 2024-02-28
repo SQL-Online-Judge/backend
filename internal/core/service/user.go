@@ -35,7 +35,7 @@ func (us *UserService) CheckPassword(u *model.User) error {
 		return fmt.Errorf("%w", ErrUserIsNil)
 	}
 
-	if u.Username == "" || u.Password == "" {
+	if !u.IsValidLogin() {
 		return fmt.Errorf("%w", ErrInvalidUsernameOrPassword)
 	}
 

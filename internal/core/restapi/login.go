@@ -36,6 +36,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !user.IsValidLogin() {
+		w.WriteHeader(http.StatusBadRequest)
+		resp := loginResponse{Error: &errorResponse{Code: http.StatusBadRequest, Message: "invalid username or password"}}
+		w.Write(resp.toJSON())
+		return
+	}
+
 	if err := userService.CheckPassword(&user); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		resp := loginResponse{Error: &errorResponse{Code: http.StatusUnauthorized, Message: "invalid username or password"}}
