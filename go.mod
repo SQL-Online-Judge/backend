@@ -6,7 +6,7 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/jwtauth/v5 v5.3.0
-	github.com/lestrrat-go/jwx/v2 v2.0.17
+	github.com/lestrrat-go/jwx/v2 v2.0.19
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/spf13/pflag v1.0.5
 	go.mongodb.org/mongo-driver v1.14.0
