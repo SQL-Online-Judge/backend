@@ -2,30 +2,37 @@ package restapi
 
 import (
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/SQL-Online-Judge/backend/internal/core/repository"
+	"github.com/SQL-Online-Judge/backend/internal/core/service"
+	"github.com/SQL-Online-Judge/backend/internal/pkg/db"
+	"github.com/go-chi/jwtauth/v5"
 )
 
+var tokenAuth *jwtauth.JWTAuth
+var repo *repository.MongoRepository
+
+var (
+	userService *service.UserService
+)
+
+func init() {
+	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
+	repo = repository.NewMongoRepository(db.GetMongoDB())
+	userService = service.NewUserService(repo)
+}
+
 func Serve() {
-	router := chi.NewRouter()
-
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
-
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello"))
-	})
+	r := NewRouter()
 
 	server := &http.Server{
 		Addr:         ":3000",
-		Handler:      router,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 	server.ListenAndServe()
 }

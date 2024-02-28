@@ -10,6 +10,7 @@ import (
 func main() {
 	defer db.GetMongo().Close()
 	defer db.GetRedis().Close()
+
 	initialize.Initialize()
 	logger.Logger.Info("Hello, SQL-Online-Judge!")
 

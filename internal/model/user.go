@@ -12,11 +12,11 @@ import (
 var ErrInvalidPassword = fmt.Errorf("invalid password")
 
 type User struct {
-	UserID           int64  `bson:"userID"`
-	Role             string `bson:"role"`
-	Username         string `bson:"username"`
-	Password         string `bson:"password"`
-	IsPasswordHashed bool   `bson:"-"`
+	UserID           int64  `bson:"userID" json:"userID"`
+	Role             string `bson:"role" json:"role"`
+	Username         string `bson:"username" json:"username"`
+	Password         string `bson:"password" json:"password"`
+	IsPasswordHashed bool   `bson:"-" json:"-"`
 }
 
 func NewEmptyUser() *User {
@@ -50,4 +50,23 @@ func (u *User) HashPassword() error {
 	u.IsPasswordHashed = true
 	logger.Logger.Info("successfully hashed password", zap.String("user", u.Username))
 	return nil
+}
+
+func (u *User) ComparePassword(password string) error {
+	if !u.IsPasswordHashed {
+		logger.Logger.Error("password not hashed", zap.String("user", u.Username))
+		return fmt.Errorf("password not hashed: %w", ErrInvalidPassword)
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	if err != nil {
+		return fmt.Errorf("failed to compare password: %w", err)
+	}
+
+	return nil
+}
+
+func (u *User) ClearPassword() {
+	u.Password = ""
+	u.IsPasswordHashed = false
 }

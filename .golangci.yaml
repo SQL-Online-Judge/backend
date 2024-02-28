@@ -11,6 +11,9 @@ linters:
     - gofumpt
     - wsl
     - nlreturn
+    - varnamelen
+    - tagalign
+    - tagliatelle
     # deprecated linters
     - varcheck
     - interfacer

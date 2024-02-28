@@ -31,28 +31,30 @@ func initMongo() {
 }
 
 func createIndex() {
-	collectionIndex := map[string]map[string]string{
-		"user":             {"field": "userID", "unique": "true"},
-		"class":            {"field": "classID", "unique": "true"},
-		"problem":          {"field": "problemID", "unique": "true"},
-		"answer":           {"field": "answerID", "unique": "true"},
-		"problemSet":       {"field": "problemSetID", "unique": "true"},
-		"classProblemSets": {"field": "classProblemSetID", "unique": "true"},
-		"task":             {"field": "taskID", "unique": "true"},
-		"submission":       {"field": "submissionID", "unique": "true"},
-		"message":          {"field": "messageID", "unique": "true"},
-		"messageBox":       {"field": "userID", "unique": "true"},
+	collectionIndexList := map[string][]map[string]string{
+		"user":             {{"field": "userID", "unique": "true"}, {"field": "username", "unique": "true"}},
+		"class":            {{"field": "classID", "unique": "true"}},
+		"problem":          {{"field": "problemID", "unique": "true"}},
+		"answer":           {{"field": "answerID", "unique": "true"}},
+		"problemSet":       {{"field": "problemSetID", "unique": "true"}},
+		"classProblemSets": {{"field": "classProblemSetID", "unique": "true"}},
+		"task":             {{"field": "taskID", "unique": "true"}},
+		"submission":       {{"field": "submissionID", "unique": "true"}},
+		"message":          {{"field": "messageID", "unique": "true"}},
+		"messageBox":       {{"field": "userID", "unique": "true"}},
 	}
 
-	for collection, indexMap := range collectionIndex {
-		unique, err := strconv.ParseBool(indexMap["unique"])
-		if err != nil {
-			logger.Logger.Fatal("failed to convert unique to bool", zap.Error(err))
-		}
+	for collection, indexList := range collectionIndexList {
+		for _, indexMap := range indexList {
+			unique, err := strconv.ParseBool(indexMap["unique"])
+			if err != nil {
+				logger.Logger.Fatal("failed to convert unique to bool", zap.Error(err))
+			}
 
-		err = db.GetMongo().CreateIndex(collection, indexMap["field"], unique)
-		if err != nil {
-			logger.Logger.Fatal("failed to create index in MongoDB", zap.Error(err))
+			err = db.GetMongo().CreateIndex(collection, indexMap["field"], unique)
+			if err != nil {
+				logger.Logger.Fatal("failed to create index in MongoDB", zap.Error(err))
+			}
 		}
 	}
 }
