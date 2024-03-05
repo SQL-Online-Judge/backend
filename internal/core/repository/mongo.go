@@ -24,44 +24,83 @@ func NewMongoRepository(db *mongo.Database) *MongoRepository {
 	}
 }
 
-func (mr *MongoRepository) CreateUser(user *model.User) error {
-	if user == nil {
-		logger.Logger.Error("user is nil")
-		return fmt.Errorf("%w", ErrUserIsNil)
-	}
-
-	if !user.IsPasswordHashed {
-		err := user.HashPassword()
-		if err != nil {
-			return fmt.Errorf("failed to hash password: %w", err)
-		}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	_, err := mr.db.Collection("user").InsertOne(ctx, user)
-	if err != nil {
-		logger.Logger.Error("failed to create user", zap.String("username", user.Username), zap.Error(err))
-		return fmt.Errorf("failed to create user: %w", err)
-	}
-
-	logger.Logger.Info("successfully created user", zap.String("username", user.Username))
-	return nil
+func (mr *MongoRepository) getCollection() *mongo.Collection {
+	return mr.db.Collection("user")
 }
 
-func (mr *MongoRepository) GetUserByUsername(username string) (*model.User, error) {
+func (mr *MongoRepository) ExistByUserID(userID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	var user model.User
-	filter := bson.D{{Key: "username", Value: username}}
-	err := mr.db.Collection("user").FindOne(ctx, filter).Decode(&user)
+	filter := bson.D{{Key: "userID", Value: userID}}
+	count, err := mr.getCollection().CountDocuments(ctx, filter)
 	if err != nil {
-		logger.Logger.Error("failed to get user by username", zap.String("username", username), zap.Error(err))
-		return nil, fmt.Errorf("failed to get user by username: %w", err)
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
 	}
 
-	user.IsPasswordHashed = true
+	return count > 0
+}
+
+func (mr *MongoRepository) ExistByUsername(username string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "username", Value: username}}
+	count, err := mr.getCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) Create(username, password, role string) (int64, error) {
+	user := model.NewUser(username, password, role)
+	hashedPassword, err := user.GetHashedPassword()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get hashed password: %w", err)
+	}
+	user.Password = hashedPassword
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = mr.getCollection().InsertOne(ctx, user)
+	if err != nil {
+		logger.Logger.Error("failed to create user", zap.String("username", user.Username), zap.Error(err))
+		return 0, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	return user.UserID, nil
+}
+
+func (mr *MongoRepository) FindByUserID(userID int64) (*model.User, error) {
+	var user model.User
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{
+		{Key: "userID", Value: userID},
+		{Key: "deleted", Value: false},
+	}
+	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user by user id: %w", err)
+	}
+
+	return &user, nil
+}
+
+func (mr *MongoRepository) FindByUsername(username string) (*model.User, error) {
+	var user model.User
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{
+		{Key: "username", Value: username},
+		{Key: "deleted", Value: false},
+	}
+	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user by username: %w", err)
+	}
+
 	return &user, nil
 }

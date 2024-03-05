@@ -22,9 +22,13 @@ func NewRouter() *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
+		r.Use(getRole)
 
 		r.Route("/admin", func(r chi.Router) {
-			r.Get("/hello", sayHello("admin"))
+			r.Group(func(r chi.Router) {
+				r.Use(checkRole("admin"))
+				r.Post("/teacher", createTeacher)
+			})
 		})
 	})
 

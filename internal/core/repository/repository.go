@@ -7,6 +7,9 @@ type Repository interface {
 }
 
 type UserRepository interface {
-	CreateUser(user *model.User) error
-	GetUserByUsername(username string) (*model.User, error)
+	Create(username, password, role string) (int64, error)
+	FindByUserID(userID int64) (*model.User, error)
+	FindByUsername(username string) (*model.User, error)
+	ExistByUserID(userID int64) bool
+	ExistByUsername(username string) bool
 }

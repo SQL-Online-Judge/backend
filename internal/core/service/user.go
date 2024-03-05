@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/SQL-Online-Judge/backend/internal/core/repository"
-	"github.com/SQL-Online-Judge/backend/internal/model"
 )
 
 var (
 	ErrUserIsNil                 = fmt.Errorf("user is nil")
+	ErrUserConflict              = fmt.Errorf("user conflict")
 	ErrInvalidUsernameOrPassword = fmt.Errorf("invalid username or password")
 )
 
@@ -22,40 +22,48 @@ func NewUserService(ur repository.UserRepository) *UserService {
 	}
 }
 
-func (us *UserService) CreateUser(u *model.User) error {
-	err := us.repo.CreateUser(u)
-	if err != nil {
-		return fmt.Errorf("failed to create user: %w", err)
-	}
-	return nil
+func (us *UserService) isUsernameExist(username string) bool {
+	return us.repo.ExistByUsername(username)
 }
 
-func (us *UserService) CheckPassword(u *model.User) error {
-	if u == nil {
-		return fmt.Errorf("%w", ErrUserIsNil)
+func (us *UserService) CreateUser(username, password, role string) (int64, error) {
+	if us.isUsernameExist(username) {
+		return 0, fmt.Errorf("%w", ErrUserConflict)
 	}
 
-	if !u.IsValidLogin() {
-		return fmt.Errorf("%w", ErrInvalidUsernameOrPassword)
-	}
-
-	user, err := us.repo.GetUserByUsername(u.Username)
+	userID, err := us.repo.Create(username, password, role)
 	if err != nil {
-		return fmt.Errorf("failed to get user by username: %w", err)
+		return 0, fmt.Errorf("failed to create user: %w", err)
 	}
+	return userID, nil
+}
 
-	err = user.ComparePassword(u.Password)
+func (us *UserService) Login(username, password string) (int64, error) {
+	user, err := us.repo.FindByUsername(username)
 	if err != nil {
-		return fmt.Errorf("failed to compare password: %w", err)
+		return 0, fmt.Errorf("failed to get user by username: %w", err)
 	}
 
-	return nil
+	err = user.ComparePassword(password)
+	if err != nil {
+		return 0, fmt.Errorf("failed to compare password: %w", err)
+	}
+
+	return user.UserID, nil
 }
 
 func (us *UserService) GetUserIDByUsername(username string) int64 {
-	user, err := us.repo.GetUserByUsername(username)
+	user, err := us.repo.FindByUsername(username)
 	if err != nil {
 		return 0
 	}
 	return user.UserID
+}
+
+func (us *UserService) GetRoleByUserID(userID int64) string {
+	user, err := us.repo.FindByUserID(userID)
+	if err != nil {
+		return ""
+	}
+	return user.Role
 }

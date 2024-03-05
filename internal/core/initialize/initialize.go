@@ -32,7 +32,11 @@ func initMongo() {
 
 func createIndex() {
 	collectionIndexList := map[string][]map[string]string{
-		"user":             {{"field": "userID", "unique": "true"}, {"field": "username", "unique": "true"}},
+		"user": {
+			{"field": "userID", "unique": "true"},
+			{"field": "username", "unique": "true"},
+			{"field": "deleted", "unique": "false"},
+		},
 		"class":            {{"field": "classID", "unique": "true"}},
 		"problem":          {{"field": "problemID", "unique": "true"}},
 		"answer":           {{"field": "answerID", "unique": "true"}},
@@ -74,7 +78,7 @@ func createAdmin() {
 		logger.Logger.Fatal("invalid admin, please check the environment variables")
 	}
 
-	err := service.NewUserService(repository.NewMongoRepository(db.GetMongoDB())).CreateUser(admin)
+	_, err := service.NewUserService(repository.NewMongoRepository(db.GetMongoDB())).CreateUser(admin.Username, admin.Password, admin.Role)
 	if err != nil {
 		logger.Logger.Fatal("failed to create admin", zap.Error(err))
 	}

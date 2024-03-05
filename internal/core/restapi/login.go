@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/SQL-Online-Judge/backend/internal/model"
@@ -11,6 +12,18 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"go.uber.org/zap"
 )
+
+type loginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func (lr *loginRequest) toUser() *model.User {
+	return &model.User{
+		Username: lr.Username,
+		Password: lr.Password,
+	}
+}
 
 type loginResponse struct {
 	Token string         `json:"token,omitempty"`
@@ -27,15 +40,18 @@ func (lr *loginResponse) toJSON() []byte {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	var user model.User
+	requestID := getRequestID(r)
+	var req loginRequest
+	var user *model.User
 
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		resp := loginResponse{Error: &errorResponse{Code: http.StatusBadRequest, Message: "invalid request"}}
 		w.Write(resp.toJSON())
 		return
 	}
 
+	user = req.toUser()
 	if !user.IsValidLogin() {
 		w.WriteHeader(http.StatusBadRequest)
 		resp := loginResponse{Error: &errorResponse{Code: http.StatusBadRequest, Message: "invalid username or password"}}
@@ -43,27 +59,19 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := userService.CheckPassword(&user); err != nil {
+	userID, err := userService.Login(user.Username, user.Password)
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		resp := loginResponse{Error: &errorResponse{Code: http.StatusUnauthorized, Message: "invalid username or password"}}
 		w.Write(resp.toJSON())
 		return
 	}
 
-	userID := userService.GetUserIDByUsername(user.Username)
-	if userID == 0 {
-		w.WriteHeader(http.StatusInternalServerError)
-		resp := loginResponse{Error: &errorResponse{Code: http.StatusInternalServerError, Message: "internal server error"}}
-		logger.Logger.Error("failed to get user id by username", zap.String("username", user.Username))
-		w.Write(resp.toJSON())
-		return
-	}
-
 	token, err := generateToken(userID)
 	if err != nil {
+		logger.Logger.Error("failed to generate token", zap.String("requestID", requestID), zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		resp := loginResponse{Error: &errorResponse{Code: http.StatusInternalServerError, Message: "internal server error"}}
-		logger.Logger.Error("failed to generate token", zap.Error(err))
 		w.Write(resp.toJSON())
 		return
 	}
@@ -75,7 +83,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 func generateToken(userID int64) (string, error) {
 	_, tokenString, err := tokenAuth.Encode(map[string]interface{}{
-		"userID":          userID,
+		"userID":          strconv.FormatInt(userID, 10),
 		jwt.ExpirationKey: time.Now().Add(time.Hour * 24),
 	})
 	if err != nil {

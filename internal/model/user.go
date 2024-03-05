@@ -12,16 +12,26 @@ import (
 var ErrInvalidPassword = fmt.Errorf("invalid password")
 
 type User struct {
-	UserID           int64  `bson:"userID" json:"userID"`
-	Role             string `bson:"role" json:"role"`
-	Username         string `bson:"username" json:"username"`
-	Password         string `bson:"password" json:"password"`
-	IsPasswordHashed bool   `bson:"-" json:"-"`
+	UserID   int64  `bson:"userID" json:"userID"`
+	Username string `bson:"username" json:"username"`
+	Password string `bson:"password" json:"password"`
+	Role     string `bson:"role" json:"role"`
+	Deleted  bool   `bson:"deleted"`
 }
 
 func NewEmptyUser() *User {
 	return &User{
 		UserID: id.NewID(),
+	}
+}
+
+func NewUser(username, password, role string) *User {
+	return &User{
+		UserID:   id.NewID(),
+		Username: username,
+		Password: password,
+		Role:     role,
+		Deleted:  false,
 	}
 }
 
@@ -47,38 +57,26 @@ func (u *User) IsValidRole() bool {
 }
 
 func (u *User) IsValidUser() bool {
-	return u.IsValidUsername() && u.IsValidPassword() && u.IsValidRole()
+	return u.IsValidUsername() && u.IsValidPassword() && u.IsValidRole() && !u.Deleted
 }
 
-func (u *User) HashPassword() error {
-	if u.IsPasswordHashed {
-		logger.Logger.Warn("password already hashed", zap.String("user", u.Username))
-		return nil
-	}
-
+func (u *User) GetHashedPassword() (string, error) {
 	if !u.IsValidPassword() {
 		logger.Logger.Error("invalid password", zap.String("user", u.Username))
-		return fmt.Errorf("invalid password: %w", ErrInvalidPassword)
+		return "", fmt.Errorf("invalid password: %w", ErrInvalidPassword)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		logger.Logger.Error("failed to hash password", zap.String("user", u.Username), zap.Error(err))
-		return fmt.Errorf("failed to hash password: %w", err)
+		return "", fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	u.Password = string(hash)
-	u.IsPasswordHashed = true
-	logger.Logger.Info("successfully hashed password", zap.String("user", u.Username))
-	return nil
+	hashedPassword := string(hash)
+	return hashedPassword, nil
 }
 
 func (u *User) ComparePassword(password string) error {
-	if !u.IsPasswordHashed {
-		logger.Logger.Error("password not hashed", zap.String("user", u.Username))
-		return fmt.Errorf("password not hashed: %w", ErrInvalidPassword)
-	}
-
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	if err != nil {
 		return fmt.Errorf("failed to compare password: %w", err)
@@ -89,5 +87,4 @@ func (u *User) ComparePassword(password string) error {
 
 func (u *User) ClearPassword() {
 	u.Password = ""
-	u.IsPasswordHashed = false
 }
