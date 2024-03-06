@@ -8,8 +8,9 @@ import (
 
 var (
 	ErrUserIsNil                 = fmt.Errorf("user is nil")
-	ErrUserConflict              = fmt.Errorf("user conflict")
 	ErrInvalidUsernameOrPassword = fmt.Errorf("invalid username or password")
+	ErrUserConflict              = fmt.Errorf("user conflict")
+	ErrUserNotFound              = fmt.Errorf("user not found")
 )
 
 type UserService struct {
@@ -20,6 +21,10 @@ func NewUserService(ur repository.UserRepository) *UserService {
 	return &UserService{
 		repo: ur,
 	}
+}
+
+func (us *UserService) isUserIDExist(userID int64) bool {
+	return us.repo.ExistByUserID(userID)
 }
 
 func (us *UserService) isUsernameExist(username string) bool {
@@ -66,4 +71,17 @@ func (us *UserService) GetRoleByUserID(userID int64) string {
 		return ""
 	}
 	return user.Role
+}
+
+func (us *UserService) DeleteByUserID(userID int64) error {
+	if !us.isUserIDExist(userID) {
+		return fmt.Errorf("%w", ErrUserNotFound)
+	}
+
+	err := us.repo.DeleteByUserID(userID)
+	if err != nil {
+		return fmt.Errorf("failed to delete user by userID: %w", err)
+	}
+
+	return nil
 }

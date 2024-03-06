@@ -104,3 +104,17 @@ func (mr *MongoRepository) FindByUsername(username string) (*model.User, error) 
 
 	return &user, nil
 }
+
+func (mr *MongoRepository) DeleteByUserID(userID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "userID", Value: userID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}}
+	_, err := mr.getCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to delete user", zap.Int64("userID", userID), zap.Error(err))
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	return nil
+}

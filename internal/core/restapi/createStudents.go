@@ -89,12 +89,12 @@ func createStudents(w http.ResponseWriter, r *http.Request) {
 					Message:  "username already exists",
 				})
 			default:
+				logger.Logger.Error("failed to create user", zap.String("requestID", requestID), zap.String("username", student.Username), zap.Error(err))
 				resp.Status = append(resp.Status, createStudentStatus{
 					Username: student.Username,
 					Code:     http.StatusInternalServerError,
 					Message:  "failed to create user",
 				})
-				logger.Logger.Error("failed to create user", zap.String("requestID", requestID), zap.Error(err))
 			}
 			continue
 		}
@@ -103,7 +103,7 @@ func createStudents(w http.ResponseWriter, r *http.Request) {
 			UserID:   strconv.FormatInt(userID, 10),
 			Username: student.Username,
 			Code:     http.StatusCreated,
-			Message:  "success",
+			Message:  "user created",
 		})
 		continue
 	}

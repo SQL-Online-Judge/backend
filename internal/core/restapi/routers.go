@@ -33,6 +33,7 @@ func NewRouter() *chi.Mux {
 			r.Group(func(r chi.Router) {
 				r.Use(checkRole("teacher"))
 				r.Post("/students", createStudents)
+				r.Delete("/students", deleteStudents)
 			})
 		})
 	})

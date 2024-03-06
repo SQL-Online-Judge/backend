@@ -12,4 +12,5 @@ type UserRepository interface {
 	FindByUsername(username string) (*model.User, error)
 	ExistByUserID(userID int64) bool
 	ExistByUsername(username string) bool
+	DeleteByUserID(userID int64) error
 }
