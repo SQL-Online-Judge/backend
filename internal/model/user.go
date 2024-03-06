@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/SQL-Online-Judge/backend/internal/pkg/id"
 	"github.com/SQL-Online-Judge/backend/internal/pkg/logger"
@@ -36,7 +37,8 @@ func NewUser(username, password, role string) *User {
 }
 
 func (u *User) IsValidUsername() bool {
-	return len(u.Username) >= 2 && len(u.Username) <= 32
+	nameLen := utf8.RuneCountInString(u.Username)
+	return nameLen >= 2 && nameLen <= 32
 }
 
 func (u *User) IsValidPassword() bool {

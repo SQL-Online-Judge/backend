@@ -84,7 +84,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 func generateToken(userID int64) (string, error) {
 	_, tokenString, err := tokenAuth.Encode(map[string]interface{}{
 		"userID":          strconv.FormatInt(userID, 10),
-		jwt.ExpirationKey: time.Now().Add(time.Hour * 24),
+		jwt.ExpirationKey: time.Now().Add(time.Hour * 24 * 30),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to encode token: %w", err)
