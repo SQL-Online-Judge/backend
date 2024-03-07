@@ -34,6 +34,7 @@ func NewRouter() *chi.Mux {
 				r.Use(checkRole("teacher"))
 				r.Post("/students", createStudents)
 				r.Delete("/students", deleteStudents)
+				r.Patch("/student/{userID}", updateStudentUsername)
 			})
 		})
 	})

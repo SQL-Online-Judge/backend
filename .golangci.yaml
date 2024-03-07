@@ -15,6 +15,7 @@ linters:
     - tagalign
     - tagliatelle
     - lll
+    - funlen
     # deprecated linters
     - varcheck
     - interfacer

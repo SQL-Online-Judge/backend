@@ -11,6 +11,7 @@ var (
 	ErrInvalidUsernameOrPassword = fmt.Errorf("invalid username or password")
 	ErrUserConflict              = fmt.Errorf("user conflict")
 	ErrUserNotFound              = fmt.Errorf("user not found")
+	ErrUserNotStudent            = fmt.Errorf("user is not student")
 )
 
 type UserService struct {
@@ -81,6 +82,32 @@ func (us *UserService) DeleteByUserID(userID int64) error {
 	err := us.repo.DeleteByUserID(userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete user by userID: %w", err)
+	}
+
+	return nil
+}
+
+func (us *UserService) UpdateStudentUsername(userID int64, username string) error {
+	if !us.isUserIDExist(userID) {
+		return fmt.Errorf("%w", ErrUserNotFound)
+	}
+
+	if us.isUsernameExist(username) {
+		return fmt.Errorf("%w", ErrUserConflict)
+	}
+
+	role, err := us.repo.GetRoleByUserID(userID)
+	if err != nil {
+		return fmt.Errorf("failed to get role by userID: %w", err)
+	}
+
+	if role != "student" {
+		return fmt.Errorf("%w", ErrUserNotStudent)
+	}
+
+	err = us.repo.UpdateUsernameByUserID(userID, username)
+	if err != nil {
+		return fmt.Errorf("failed to update username: %w", err)
 	}
 
 	return nil

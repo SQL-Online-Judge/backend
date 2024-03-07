@@ -118,3 +118,31 @@ func (mr *MongoRepository) DeleteByUserID(userID int64) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) GetRoleByUserID(userID int64) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "userID", Value: userID}}
+	var user model.User
+	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		logger.Logger.Error("failed to get role by userID", zap.Int64("userID", userID), zap.Error(err))
+		return "", fmt.Errorf("failed to get role by userID: %w", err)
+	}
+
+	return user.Role, nil
+}
+
+func (mr *MongoRepository) UpdateUsernameByUserID(userID int64, username string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "userID", Value: userID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "username", Value: username}}}}
+	_, err := mr.getCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to update username", zap.Int64("userID", userID), zap.String("username", username), zap.Error(err))
+		return fmt.Errorf("failed to update username: %w", err)
+	}
+
+	return nil
+}

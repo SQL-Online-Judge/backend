@@ -13,4 +13,6 @@ type UserRepository interface {
 	ExistByUserID(userID int64) bool
 	ExistByUsername(username string) bool
 	DeleteByUserID(userID int64) error
+	GetRoleByUserID(userID int64) (string, error)
+	UpdateUsernameByUserID(userID int64, username string) error
 }
