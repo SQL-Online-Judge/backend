@@ -15,4 +15,5 @@ type UserRepository interface {
 	DeleteByUserID(userID int64) error
 	GetRoleByUserID(userID int64) (string, error)
 	UpdateUsernameByUserID(userID int64, username string) error
+	IsDeletedByUserID(userID int64) bool
 }

@@ -146,3 +146,17 @@ func (mr *MongoRepository) UpdateUsernameByUserID(userID int64, username string)
 
 	return nil
 }
+
+func (mr *MongoRepository) IsDeletedByUserID(userID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "userID", Value: userID}}
+	var user model.User
+	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		logger.Logger.Error("failed to find user by userID", zap.Int64("userID", userID), zap.Error(err))
+		return true
+	}
+
+	return user.Deleted
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/SQL-Online-Judge/backend/internal/core/repository"
+	"github.com/SQL-Online-Judge/backend/internal/model"
 )
 
 var (
@@ -30,6 +31,10 @@ func (us *UserService) isUserIDExist(userID int64) bool {
 
 func (us *UserService) isUsernameExist(username string) bool {
 	return us.repo.ExistByUsername(username)
+}
+
+func (us *UserService) isUserDeleted(userID int64) bool {
+	return us.repo.IsDeletedByUserID(userID)
 }
 
 func (us *UserService) CreateUser(username, password, role string) (int64, error) {
@@ -87,13 +92,13 @@ func (us *UserService) DeleteByUserID(userID int64) error {
 	return nil
 }
 
-func (us *UserService) UpdateStudentUsername(userID int64, username string) error {
+func (us *UserService) isStudentExist(userID int64) error {
 	if !us.isUserIDExist(userID) {
 		return fmt.Errorf("%w", ErrUserNotFound)
 	}
 
-	if us.isUsernameExist(username) {
-		return fmt.Errorf("%w", ErrUserConflict)
+	if us.isUserDeleted(userID) {
+		return fmt.Errorf("%w", ErrUserNotFound)
 	}
 
 	role, err := us.repo.GetRoleByUserID(userID)
@@ -105,10 +110,33 @@ func (us *UserService) UpdateStudentUsername(userID int64, username string) erro
 		return fmt.Errorf("%w", ErrUserNotStudent)
 	}
 
-	err = us.repo.UpdateUsernameByUserID(userID, username)
-	if err != nil {
+	return nil
+}
+
+func (us *UserService) UpdateStudentUsername(userID int64, username string) error {
+	if err := us.isStudentExist(userID); err != nil {
+		return err
+	}
+
+	if us.isUsernameExist(username) {
+		return fmt.Errorf("%w", ErrUserConflict)
+	}
+
+	if err := us.repo.UpdateUsernameByUserID(userID, username); err != nil {
 		return fmt.Errorf("failed to update username: %w", err)
 	}
 
 	return nil
+}
+
+func (us *UserService) GetStudent(userID int64) (*model.User, error) {
+	if err := us.isStudentExist(userID); err != nil {
+		return nil, err
+	}
+
+	user, err := us.repo.FindByUserID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get student: %w", err)
+	}
+	return user, nil
 }
