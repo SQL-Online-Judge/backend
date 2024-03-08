@@ -50,6 +50,10 @@ func (us *UserService) CreateUser(username, password, role string) (int64, error
 }
 
 func (us *UserService) Login(username, password string) (int64, error) {
+	if !us.isUsernameExist(username) {
+		return 0, fmt.Errorf("%w", ErrUserNotFound)
+	}
+
 	user, err := us.repo.FindByUsername(username)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get user by username: %w", err)
@@ -64,6 +68,10 @@ func (us *UserService) Login(username, password string) (int64, error) {
 }
 
 func (us *UserService) GetUserIDByUsername(username string) int64 {
+	if !us.isUsernameExist(username) {
+		return 0
+	}
+
 	user, err := us.repo.FindByUsername(username)
 	if err != nil {
 		return 0
@@ -72,6 +80,10 @@ func (us *UserService) GetUserIDByUsername(username string) int64 {
 }
 
 func (us *UserService) GetRoleByUserID(userID int64) string {
+	if !us.isUserIDExist(userID) {
+		return ""
+	}
+
 	user, err := us.repo.FindByUserID(userID)
 	if err != nil {
 		return ""
