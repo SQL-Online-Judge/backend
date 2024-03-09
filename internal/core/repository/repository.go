@@ -21,4 +21,7 @@ type UserRepository interface {
 
 type ClassRepository interface {
 	CreateClass(className string, teacherID int64) (int64, error)
+	ExistByClassID(classID int64) bool
+	IsClassOwner(userID, classID int64) bool
+	DeleteByClassID(classID int64) error
 }

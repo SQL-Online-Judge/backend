@@ -210,3 +210,46 @@ func (mr *MongoRepository) CreateClass(className string, teacherID int64) (int64
 
 	return class.ClassID, nil
 }
+
+func (mr *MongoRepository) ExistByClassID(classID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "classID", Value: classID}}
+	count, err := mr.db.Collection("class").CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) IsClassOwner(userID, classID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{
+		{Key: "classID", Value: classID},
+		{Key: "teacherID", Value: userID},
+	}
+	count, err := mr.db.Collection("class").CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) DeleteByClassID(classID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "classID", Value: classID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}}
+	_, err := mr.db.Collection("class").UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to delete class", zap.Int64("classID", classID), zap.Error(err))
+		return fmt.Errorf("failed to delete class: %w", err)
+	}
+
+	return nil
+}
