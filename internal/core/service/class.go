@@ -34,6 +34,10 @@ func (cs *ClassService) isClassIDExist(classID int64) bool {
 	return cs.repo.ExistByClassID(classID)
 }
 
+func (cs *ClassService) isClassDeleted(classID int64) bool {
+	return cs.repo.IsClassDeleted(classID)
+}
+
 func (cs *ClassService) checkClassOwner(teacherID, classID int64) bool {
 	return cs.repo.IsClassOwner(teacherID, classID)
 }
@@ -50,6 +54,27 @@ func (cs *ClassService) DeleteClass(teacherID, classID int64) error {
 	err := cs.repo.DeleteByClassID(classID)
 	if err != nil {
 		return fmt.Errorf("failed to delete class: %w", err)
+	}
+
+	return nil
+}
+
+func (cs *ClassService) UpdateClassName(teacherID, classID int64, className string) error {
+	if !cs.isClassIDExist(classID) {
+		return fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if cs.isClassDeleted(classID) {
+		return fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if !cs.checkClassOwner(teacherID, classID) {
+		return fmt.Errorf("%w", ErrNotOfClassOwner)
+	}
+
+	err := cs.repo.UpdateClassNameByClassID(classID, className)
+	if err != nil {
+		return fmt.Errorf("failed to update class name: %w", err)
 	}
 
 	return nil

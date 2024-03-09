@@ -253,3 +253,31 @@ func (mr *MongoRepository) DeleteByClassID(classID int64) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) IsClassDeleted(classID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "classID", Value: classID}}
+	var class model.Class
+	err := mr.db.Collection("class").FindOne(ctx, filter).Decode(&class)
+	if err != nil {
+		logger.Logger.Error("failed to find class by classID", zap.Int64("classID", classID), zap.Error(err))
+		return true
+	}
+
+	return class.Deleted
+}
+
+func (mr *MongoRepository) UpdateClassNameByClassID(classID int64, className string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "classID", Value: classID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "className", Value: className}}}}
+	_, err := mr.db.Collection("class").UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to update class name", zap.Int64("classID", classID), zap.String("className", className), zap.Error(err))
+		return fmt.Errorf("failed to update class name: %w", err)
+	}
+
+	return nil
+}
