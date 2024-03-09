@@ -36,6 +36,7 @@ func NewRouter() *chi.Mux {
 				r.Delete("/students", deleteStudents)
 				r.Patch("/students/{userID}", updateStudentUsername)
 				r.Get("/students/{userID}", getStudent)
+				r.Get("/students", getStudents)
 			})
 		})
 	})

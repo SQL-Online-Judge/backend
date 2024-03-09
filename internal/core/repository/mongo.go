@@ -8,7 +8,9 @@ import (
 	"github.com/SQL-Online-Judge/backend/internal/model"
 	"github.com/SQL-Online-Judge/backend/internal/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
 
@@ -159,4 +161,38 @@ func (mr *MongoRepository) IsDeletedByUserID(userID int64) bool {
 	}
 
 	return user.Deleted
+}
+
+func (mr *MongoRepository) GetStudents(contains string) ([]*model.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{
+		{Key: "role", Value: "student"},
+		{Key: "username", Value: bson.D{{Key: "$regex", Value: primitive.Regex{Pattern: contains, Options: "i"}}}},
+		{Key: "deleted", Value: false},
+	}
+	options := &options.FindOptions{
+		Projection: bson.D{
+			{Key: "password", Value: 0},
+		},
+	}
+	cursor, err := mr.getCollection().Find(ctx, filter, options)
+	if err != nil {
+		logger.Logger.Error("failed to get students", zap.Error(err))
+		return nil, fmt.Errorf("failed to get students: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var students []*model.User
+	for cursor.Next(ctx) {
+		var student model.User
+		err := cursor.Decode(&student)
+		if err != nil {
+			logger.Logger.Error("failed to decode student", zap.Error(err))
+			return nil, fmt.Errorf("failed to decode student: %w", err)
+		}
+		students = append(students, &student)
+	}
+
+	return students, nil
 }

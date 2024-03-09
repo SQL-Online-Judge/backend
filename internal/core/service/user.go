@@ -152,3 +152,11 @@ func (us *UserService) GetStudent(userID int64) (*model.User, error) {
 	}
 	return user, nil
 }
+
+func (us *UserService) GetStudents(contains string) ([]*model.User, error) {
+	students, err := us.repo.GetStudents(contains)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get students: %w", err)
+	}
+	return students, nil
+}

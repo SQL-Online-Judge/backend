@@ -16,4 +16,5 @@ type UserRepository interface {
 	GetRoleByUserID(userID int64) (string, error)
 	UpdateUsernameByUserID(userID int64, username string) error
 	IsDeletedByUserID(userID int64) bool
+	GetStudents(contains string) ([]*model.User, error)
 }
