@@ -7,7 +7,7 @@ type Repository interface {
 }
 
 type UserRepository interface {
-	Create(username, password, role string) (int64, error)
+	CreateUser(username, password, role string) (int64, error)
 	FindByUserID(userID int64) (*model.User, error)
 	FindByUsername(username string) (*model.User, error)
 	ExistByUserID(userID int64) bool
@@ -17,4 +17,8 @@ type UserRepository interface {
 	UpdateUsernameByUserID(userID int64, username string) error
 	IsDeletedByUserID(userID int64) bool
 	GetStudents(contains string) ([]*model.User, error)
+}
+
+type ClassRepository interface {
+	CreateClass(className string, teacherID int64) (int64, error)
 }

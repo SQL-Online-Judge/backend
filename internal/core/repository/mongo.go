@@ -56,7 +56,7 @@ func (mr *MongoRepository) ExistByUsername(username string) bool {
 	return count > 0
 }
 
-func (mr *MongoRepository) Create(username, password, role string) (int64, error) {
+func (mr *MongoRepository) CreateUser(username, password, role string) (int64, error) {
 	user := model.NewUser(username, password, role)
 	hashedPassword, err := user.GetHashedPassword()
 	if err != nil {
@@ -195,4 +195,18 @@ func (mr *MongoRepository) GetStudents(contains string) ([]*model.User, error) {
 	}
 
 	return students, nil
+}
+
+func (mr *MongoRepository) CreateClass(className string, teacherID int64) (int64, error) {
+	class := model.NewClass(className, teacherID)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := mr.db.Collection("class").InsertOne(ctx, class)
+	if err != nil {
+		logger.Logger.Error("failed to create class", zap.String("className", className), zap.Int64("teacherID", teacherID), zap.Error(err))
+		return 0, fmt.Errorf("failed to create class: %w", err)
+	}
+
+	return class.ClassID, nil
 }

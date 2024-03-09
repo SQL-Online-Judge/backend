@@ -42,7 +42,7 @@ func (us *UserService) CreateUser(username, password, role string) (int64, error
 		return 0, fmt.Errorf("%w", ErrUserConflict)
 	}
 
-	userID, err := us.repo.Create(username, password, role)
+	userID, err := us.repo.CreateUser(username, password, role)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create user: %w", err)
 	}

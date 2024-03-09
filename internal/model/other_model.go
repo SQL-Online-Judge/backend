@@ -2,13 +2,6 @@ package model
 
 import "time"
 
-type Class struct {
-	ClassID   int64   `bson:"classID"`
-	ClassName string  `bson:"className"`
-	TeacherID int64   `bson:"teacherID"`
-	Students  []int64 `bson:"students"`
-}
-
 type Problem struct {
 	ProblemID   int64    `bson:"problemID"`
 	AuthorID    int64    `bson:"authorID"`
