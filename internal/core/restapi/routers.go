@@ -42,6 +42,8 @@ func NewRouter() *chi.Mux {
 				r.Delete("/classes/{classID}", deleteClass)
 				r.Patch("/classes/{classID}", updateClassName)
 				r.Get("/classes", getClasses)
+
+				r.Post("/classes/{classID}/students", addStudentsToClass)
 			})
 		})
 	})

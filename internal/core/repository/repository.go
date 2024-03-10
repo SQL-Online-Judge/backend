@@ -22,9 +22,11 @@ type UserRepository interface {
 type ClassRepository interface {
 	CreateClass(className string, teacherID int64) (int64, error)
 	ExistByClassID(classID int64) bool
-	IsClassOwner(userID, classID int64) bool
+	IsClassOwner(teacherID, classID int64) bool
 	DeleteByClassID(classID int64) error
 	IsClassDeleted(classID int64) bool
 	UpdateClassNameByClassID(classID int64, className string) error
 	FindClassesByTeacherID(teacherID int64) ([]*model.Class, error)
+	IsClassMember(classID, studentID int64) bool
+	AddStudentToClass(classID, studentID int64) error
 }

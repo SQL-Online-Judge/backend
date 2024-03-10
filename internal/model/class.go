@@ -19,6 +19,7 @@ func NewClass(className string, teacherID int64) *Class {
 		ClassID:   id.NewID(),
 		ClassName: className,
 		TeacherID: teacherID,
+		Students:  []int64{},
 	}
 }
 

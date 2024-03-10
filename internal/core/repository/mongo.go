@@ -26,15 +26,19 @@ func NewMongoRepository(db *mongo.Database) *MongoRepository {
 	}
 }
 
-func (mr *MongoRepository) getCollection() *mongo.Collection {
+func (mr *MongoRepository) getUserCollection() *mongo.Collection {
 	return mr.db.Collection("user")
+}
+
+func (mr *MongoRepository) getClassCollection() *mongo.Collection {
+	return mr.db.Collection("class")
 }
 
 func (mr *MongoRepository) ExistByUserID(userID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	filter := bson.D{{Key: "userID", Value: userID}}
-	count, err := mr.getCollection().CountDocuments(ctx, filter)
+	count, err := mr.getUserCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		logger.Logger.Error("failed to count documents", zap.Error(err))
 		return false
@@ -47,7 +51,7 @@ func (mr *MongoRepository) ExistByUsername(username string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	filter := bson.D{{Key: "username", Value: username}}
-	count, err := mr.getCollection().CountDocuments(ctx, filter)
+	count, err := mr.getUserCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		logger.Logger.Error("failed to count documents", zap.Error(err))
 		return false
@@ -66,7 +70,7 @@ func (mr *MongoRepository) CreateUser(username, password, role string) (int64, e
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err = mr.getCollection().InsertOne(ctx, user)
+	_, err = mr.getUserCollection().InsertOne(ctx, user)
 	if err != nil {
 		logger.Logger.Error("failed to create user", zap.String("username", user.Username), zap.Error(err))
 		return 0, fmt.Errorf("failed to create user: %w", err)
@@ -83,7 +87,7 @@ func (mr *MongoRepository) FindByUserID(userID int64) (*model.User, error) {
 		{Key: "userID", Value: userID},
 		{Key: "deleted", Value: false},
 	}
-	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	err := mr.getUserCollection().FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user by user id: %w", err)
 	}
@@ -99,7 +103,7 @@ func (mr *MongoRepository) FindByUsername(username string) (*model.User, error) 
 		{Key: "username", Value: username},
 		{Key: "deleted", Value: false},
 	}
-	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	err := mr.getUserCollection().FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user by username: %w", err)
 	}
@@ -112,7 +116,7 @@ func (mr *MongoRepository) DeleteByUserID(userID int64) error {
 	defer cancel()
 	filter := bson.D{{Key: "userID", Value: userID}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}}
-	_, err := mr.getCollection().UpdateOne(ctx, filter, update)
+	_, err := mr.getUserCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		logger.Logger.Error("failed to delete user", zap.Int64("userID", userID), zap.Error(err))
 		return fmt.Errorf("failed to delete user: %w", err)
@@ -126,7 +130,7 @@ func (mr *MongoRepository) GetRoleByUserID(userID int64) (string, error) {
 	defer cancel()
 	filter := bson.D{{Key: "userID", Value: userID}}
 	var user model.User
-	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	err := mr.getUserCollection().FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		logger.Logger.Error("failed to get role by userID", zap.Int64("userID", userID), zap.Error(err))
 		return "", fmt.Errorf("failed to get role by userID: %w", err)
@@ -140,7 +144,7 @@ func (mr *MongoRepository) UpdateUsernameByUserID(userID int64, username string)
 	defer cancel()
 	filter := bson.D{{Key: "userID", Value: userID}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "username", Value: username}}}}
-	_, err := mr.getCollection().UpdateOne(ctx, filter, update)
+	_, err := mr.getUserCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		logger.Logger.Error("failed to update username", zap.Int64("userID", userID), zap.String("username", username), zap.Error(err))
 		return fmt.Errorf("failed to update username: %w", err)
@@ -154,7 +158,7 @@ func (mr *MongoRepository) IsDeletedByUserID(userID int64) bool {
 	defer cancel()
 	filter := bson.D{{Key: "userID", Value: userID}}
 	var user model.User
-	err := mr.getCollection().FindOne(ctx, filter).Decode(&user)
+	err := mr.getUserCollection().FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		logger.Logger.Error("failed to find user by userID", zap.Int64("userID", userID), zap.Error(err))
 		return true
@@ -176,7 +180,7 @@ func (mr *MongoRepository) GetStudents(contains string) ([]*model.User, error) {
 			{Key: "password", Value: 0},
 		},
 	}
-	cursor, err := mr.getCollection().Find(ctx, filter, options)
+	cursor, err := mr.getUserCollection().Find(ctx, filter, options)
 	if err != nil {
 		logger.Logger.Error("failed to get students", zap.Error(err))
 		return nil, fmt.Errorf("failed to get students: %w", err)
@@ -202,7 +206,7 @@ func (mr *MongoRepository) CreateClass(className string, teacherID int64) (int64
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := mr.db.Collection("class").InsertOne(ctx, class)
+	_, err := mr.getClassCollection().InsertOne(ctx, class)
 	if err != nil {
 		logger.Logger.Error("failed to create class", zap.String("className", className), zap.Int64("teacherID", teacherID), zap.Error(err))
 		return 0, fmt.Errorf("failed to create class: %w", err)
@@ -215,7 +219,7 @@ func (mr *MongoRepository) ExistByClassID(classID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	filter := bson.D{{Key: "classID", Value: classID}}
-	count, err := mr.db.Collection("class").CountDocuments(ctx, filter)
+	count, err := mr.getClassCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		logger.Logger.Error("failed to count documents", zap.Error(err))
 		return false
@@ -224,14 +228,14 @@ func (mr *MongoRepository) ExistByClassID(classID int64) bool {
 	return count > 0
 }
 
-func (mr *MongoRepository) IsClassOwner(userID, classID int64) bool {
+func (mr *MongoRepository) IsClassOwner(teacherID, classID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	filter := bson.D{
 		{Key: "classID", Value: classID},
-		{Key: "teacherID", Value: userID},
+		{Key: "teacherID", Value: teacherID},
 	}
-	count, err := mr.db.Collection("class").CountDocuments(ctx, filter)
+	count, err := mr.getClassCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		logger.Logger.Error("failed to count documents", zap.Error(err))
 		return false
@@ -245,7 +249,7 @@ func (mr *MongoRepository) DeleteByClassID(classID int64) error {
 	defer cancel()
 	filter := bson.D{{Key: "classID", Value: classID}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}}
-	_, err := mr.db.Collection("class").UpdateOne(ctx, filter, update)
+	_, err := mr.getClassCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		logger.Logger.Error("failed to delete class", zap.Int64("classID", classID), zap.Error(err))
 		return fmt.Errorf("failed to delete class: %w", err)
@@ -259,7 +263,7 @@ func (mr *MongoRepository) IsClassDeleted(classID int64) bool {
 	defer cancel()
 	filter := bson.D{{Key: "classID", Value: classID}}
 	var class model.Class
-	err := mr.db.Collection("class").FindOne(ctx, filter).Decode(&class)
+	err := mr.getClassCollection().FindOne(ctx, filter).Decode(&class)
 	if err != nil {
 		logger.Logger.Error("failed to find class by classID", zap.Int64("classID", classID), zap.Error(err))
 		return true
@@ -273,7 +277,7 @@ func (mr *MongoRepository) UpdateClassNameByClassID(classID int64, className str
 	defer cancel()
 	filter := bson.D{{Key: "classID", Value: classID}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "className", Value: className}}}}
-	_, err := mr.db.Collection("class").UpdateOne(ctx, filter, update)
+	_, err := mr.getClassCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		logger.Logger.Error("failed to update class name", zap.Int64("classID", classID), zap.String("className", className), zap.Error(err))
 		return fmt.Errorf("failed to update class name: %w", err)
@@ -289,7 +293,7 @@ func (mr *MongoRepository) FindClassesByTeacherID(teacherID int64) ([]*model.Cla
 		{Key: "teacherID", Value: teacherID},
 		{Key: "deleted", Value: false},
 	}
-	cursor, err := mr.db.Collection("class").Find(ctx, filter)
+	cursor, err := mr.getClassCollection().Find(ctx, filter)
 	if err != nil {
 		logger.Logger.Error("failed to get classes", zap.Error(err))
 		return nil, fmt.Errorf("failed to get classes: %w", err)
@@ -308,4 +312,36 @@ func (mr *MongoRepository) FindClassesByTeacherID(teacherID int64) ([]*model.Cla
 	}
 
 	return classes, nil
+}
+
+func (mr *MongoRepository) IsClassMember(classID, studentID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "classID", Value: classID},
+		{Key: "students", Value: bson.D{{Key: "$in", Value: []int64{studentID}}}},
+	}
+	count, err := mr.getClassCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) AddStudentToClass(classID int64, studentID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "classID", Value: classID}}
+	update := bson.D{{Key: "$addToSet", Value: bson.D{{Key: "students", Value: studentID}}}}
+	_, err := mr.getClassCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to add students to class", zap.Int64("classID", classID), zap.Int64("studentID", studentID), zap.Error(err))
+		return fmt.Errorf("failed to add students to class: %w", err)
+	}
+
+	return nil
 }
