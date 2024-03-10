@@ -281,3 +281,31 @@ func (mr *MongoRepository) UpdateClassNameByClassID(classID int64, className str
 
 	return nil
 }
+
+func (mr *MongoRepository) FindClassesByTeacherID(teacherID int64) ([]*model.Class, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.D{
+		{Key: "teacherID", Value: teacherID},
+		{Key: "deleted", Value: false},
+	}
+	cursor, err := mr.db.Collection("class").Find(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to get classes", zap.Error(err))
+		return nil, fmt.Errorf("failed to get classes: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var classes []*model.Class
+	for cursor.Next(ctx) {
+		var class model.Class
+		err := cursor.Decode(&class)
+		if err != nil {
+			logger.Logger.Error("failed to decode class", zap.Error(err))
+			return nil, fmt.Errorf("failed to decode class: %w", err)
+		}
+		classes = append(classes, &class)
+	}
+
+	return classes, nil
+}

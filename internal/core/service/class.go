@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/SQL-Online-Judge/backend/internal/core/repository"
+	"github.com/SQL-Online-Judge/backend/internal/model"
 )
 
 var (
@@ -78,4 +79,13 @@ func (cs *ClassService) UpdateClassName(teacherID, classID int64, className stri
 	}
 
 	return nil
+}
+
+func (cs *ClassService) GetClasses(teacherID int64) ([]*model.Class, error) {
+	classes, err := cs.repo.FindClassesByTeacherID(teacherID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get classes: %w", err)
+	}
+
+	return classes, nil
 }

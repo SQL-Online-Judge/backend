@@ -26,4 +26,5 @@ type ClassRepository interface {
 	DeleteByClassID(classID int64) error
 	IsClassDeleted(classID int64) bool
 	UpdateClassNameByClassID(classID int64, className string) error
+	FindClassesByTeacherID(teacherID int64) ([]*model.Class, error)
 }
