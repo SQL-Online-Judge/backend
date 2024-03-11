@@ -11,6 +11,7 @@ var (
 	ErrClassNotFound         = fmt.Errorf("class not found")
 	ErrNotOfClassOwner       = fmt.Errorf("teacher is not the owner of the class")
 	ErrStudentAlreadyInClass = fmt.Errorf("student is already in the class")
+	ErrStudentNotInClass     = fmt.Errorf("student is not in the class")
 )
 
 type ClassService struct {
@@ -123,6 +124,42 @@ func (cs *ClassService) AddStudentsToClass(us *UserService, teacherID, classID i
 		err := cs.repo.AddStudentToClass(classID, studentID)
 		if err != nil {
 			errs[studentID] = fmt.Errorf("failed to add student to class: %w", err)
+		} else {
+			errs[studentID] = nil
+		}
+	}
+
+	return errs, nil
+}
+
+func (cs *ClassService) RemoveStudentsFromClass(us *UserService, teacherID, classID int64, studentIDs []int64) (map[int64]error, error) {
+	if !cs.isClassIDExist(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if cs.isClassDeleted(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if !cs.checkClassOwner(teacherID, classID) {
+		return nil, fmt.Errorf("%w", ErrNotOfClassOwner)
+	}
+
+	errs := make(map[int64]error)
+	for _, studentID := range studentIDs {
+		if err := us.isStudentExist(studentID); err != nil {
+			errs[studentID] = err
+			continue
+		}
+
+		if !cs.isClassMember(classID, studentID) {
+			errs[studentID] = fmt.Errorf("%w", ErrStudentNotInClass)
+			continue
+		}
+
+		err := cs.repo.RemoveStudentFromClass(classID, studentID)
+		if err != nil {
+			errs[studentID] = fmt.Errorf("failed to remove student from class: %w", err)
 		} else {
 			errs[studentID] = nil
 		}

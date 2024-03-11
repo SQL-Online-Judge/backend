@@ -29,4 +29,5 @@ type ClassRepository interface {
 	FindClassesByTeacherID(teacherID int64) ([]*model.Class, error)
 	IsClassMember(classID, studentID int64) bool
 	AddStudentToClass(classID, studentID int64) error
+	RemoveStudentFromClass(classID, studentID int64) error
 }

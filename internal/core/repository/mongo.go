@@ -345,3 +345,18 @@ func (mr *MongoRepository) AddStudentToClass(classID int64, studentID int64) err
 
 	return nil
 }
+
+func (mr *MongoRepository) RemoveStudentFromClass(classID int64, studentID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "classID", Value: classID}}
+	update := bson.D{{Key: "$pull", Value: bson.D{{Key: "students", Value: studentID}}}}
+	_, err := mr.getClassCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to remove students from class", zap.Int64("classID", classID), zap.Int64("studentID", studentID), zap.Error(err))
+		return fmt.Errorf("failed to remove students from class: %w", err)
+	}
+
+	return nil
+}
