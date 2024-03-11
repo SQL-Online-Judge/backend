@@ -16,6 +16,7 @@ linters:
     - tagliatelle
     - lll
     - funlen
+    - interfacebloat
     # deprecated linters
     - varcheck
     - interfacer

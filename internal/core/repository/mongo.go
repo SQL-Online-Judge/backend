@@ -360,3 +360,39 @@ func (mr *MongoRepository) RemoveStudentFromClass(classID int64, studentID int64
 
 	return nil
 }
+
+func (mr *MongoRepository) FindStudentsByClassID(classID int64) ([]*model.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{{Key: "classID", Value: classID}}}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "user"},
+			{Key: "localField", Value: "students"},
+			{Key: "foreignField", Value: "userID"},
+			{Key: "as", Value: "students"},
+		}}},
+		{{Key: "$unwind", Value: "$students"}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 0},
+			{Key: "userID", Value: "$students.userID"},
+			{Key: "username", Value: "$students.username"},
+		}}},
+	}
+
+	cursor, err := mr.getClassCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		logger.Logger.Error("failed to aggregate", zap.Error(err))
+		return nil, fmt.Errorf("failed to aggregate: %w", err)
+	}
+
+	var students []*model.User
+	err = cursor.All(ctx, &students)
+	if err != nil {
+		logger.Logger.Error("failed to decode students", zap.Error(err))
+		return nil, fmt.Errorf("failed to decode students: %w", err)
+	}
+
+	return students, nil
+}

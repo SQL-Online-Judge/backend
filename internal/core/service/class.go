@@ -167,3 +167,24 @@ func (cs *ClassService) RemoveStudentsFromClass(us *UserService, teacherID, clas
 
 	return errs, nil
 }
+
+func (cs *ClassService) GetStudentsInClass(teacherID, classID int64) ([]*model.User, error) {
+	if !cs.isClassIDExist(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if cs.isClassDeleted(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if !cs.checkClassOwner(teacherID, classID) {
+		return nil, fmt.Errorf("%w", ErrNotOfClassOwner)
+	}
+
+	students, err := cs.repo.FindStudentsByClassID(classID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get students in class: %w", err)
+	}
+
+	return students, nil
+}
