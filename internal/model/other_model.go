@@ -2,17 +2,6 @@ package model
 
 import "time"
 
-type Problem struct {
-	ProblemID   int64    `bson:"problemID"`
-	AuthorID    int64    `bson:"authorID"`
-	ProblemType string   `bson:"problemType"`
-	Title       string   `bson:"title"`
-	Content     string   `bson:"content"`
-	TimeLimit   int32    `bson:"timeLimit"`
-	MemoryLimit int32    `bson:"memoryLimit"`
-	Tags        []string `bson:"tags"`
-}
-
 type Answer struct {
 	AnswerID     int64  `bson:"answerID"`
 	ProblemID    int64  `bson:"problemID"`

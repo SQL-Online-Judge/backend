@@ -32,3 +32,13 @@ type ClassRepository interface {
 	RemoveStudentFromClass(classID, studentID int64) error
 	FindStudentsByClassID(classID int64) ([]*model.User, error)
 }
+
+type ProblemRepository interface {
+	CreateProblem(p *model.Problem) (int64, error)
+	// ExistByProblemID(problemID int64) bool
+	// DeleteByProblemID(problemID int64) error
+	// IsProblemDeleted(problemID int64) bool
+	// UpdateProblemByProblemID(problemID int64, p *model.Problem) error
+	// FindProblemsByAuthorID(authorID int64) ([]*model.Problem, error)
+	// FindByProblemID(problemID int64) (*model.Problem, error)
+}

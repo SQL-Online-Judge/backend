@@ -15,15 +15,18 @@ var tokenAuth *jwtauth.JWTAuth
 var repo *repository.MongoRepository
 
 var (
-	userService  *service.UserService
-	classService *service.ClassService
+	userService    *service.UserService
+	classService   *service.ClassService
+	problemService *service.ProblemService
 )
 
 func init() {
 	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
 	repo = repository.NewMongoRepository(db.GetMongoDB())
+
 	userService = service.NewUserService(repo)
 	classService = service.NewClassService(repo)
+	problemService = service.NewProblemService(repo)
 }
 
 func Serve() {

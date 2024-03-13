@@ -34,6 +34,10 @@ func (mr *MongoRepository) getClassCollection() *mongo.Collection {
 	return mr.db.Collection("class")
 }
 
+func (mr *MongoRepository) getProblemCollection() *mongo.Collection {
+	return mr.db.Collection("problem")
+}
+
 func (mr *MongoRepository) ExistByUserID(userID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -395,4 +399,17 @@ func (mr *MongoRepository) FindStudentsByClassID(classID int64) ([]*model.User, 
 	}
 
 	return students, nil
+}
+
+func (mr *MongoRepository) CreateProblem(p *model.Problem) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := mr.getProblemCollection().InsertOne(ctx, p)
+	if err != nil {
+		logger.Logger.Error("failed to create problem", zap.Error(err))
+		return 0, fmt.Errorf("failed to create problem: %w", err)
+	}
+
+	return p.ProblemID, nil
 }
