@@ -35,9 +35,10 @@ type ClassRepository interface {
 
 type ProblemRepository interface {
 	CreateProblem(p *model.Problem) (int64, error)
-	// ExistByProblemID(problemID int64) bool
-	// DeleteByProblemID(problemID int64) error
-	// IsProblemDeleted(problemID int64) bool
+	ExistByProblemID(problemID int64) bool
+	IsProblemDeleted(problemID int64) bool
+	IsProblemAuthor(teacherID, problemID int64) bool
+	DeleteByProblemID(problemID int64) error
 	// UpdateProblemByProblemID(problemID int64, p *model.Problem) error
 	// FindProblemsByAuthorID(authorID int64) ([]*model.Problem, error)
 	// FindByProblemID(problemID int64) (*model.Problem, error)

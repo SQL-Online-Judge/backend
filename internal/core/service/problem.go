@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	ErrProblemNotFound = fmt.Errorf("problem not found")
+	ErrProblemNotFound  = fmt.Errorf("problem not found")
+	ErrNotProblemAuthor = fmt.Errorf("not the author of the problem")
 )
 
 type ProblemService struct {
@@ -28,4 +29,37 @@ func (ps *ProblemService) CreateProblem(p *model.Problem) (int64, error) {
 	}
 
 	return problemID, nil
+}
+
+func (ps *ProblemService) isProblemIDExist(problemID int64) bool {
+	return ps.repo.ExistByProblemID(problemID)
+}
+
+func (ps *ProblemService) isProblemDeleted(problemID int64) bool {
+	return ps.repo.IsProblemDeleted(problemID)
+}
+
+func (ps *ProblemService) checkProblemAuthor(teacherID, problemID int64) bool {
+	return ps.repo.IsProblemAuthor(teacherID, problemID)
+}
+
+func (ps *ProblemService) DeleteProblem(teacherID, problemID int64) error {
+	if !ps.isProblemIDExist(problemID) {
+		return fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if ps.isProblemDeleted(problemID) {
+		return fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if !ps.checkProblemAuthor(teacherID, problemID) {
+		return fmt.Errorf("%w", ErrNotProblemAuthor)
+	}
+
+	err := ps.repo.DeleteByProblemID(problemID)
+	if err != nil {
+		return fmt.Errorf("failed to delete problem: %w", err)
+	}
+
+	return nil
 }

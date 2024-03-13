@@ -413,3 +413,64 @@ func (mr *MongoRepository) CreateProblem(p *model.Problem) (int64, error) {
 
 	return p.ProblemID, nil
 }
+
+func (mr *MongoRepository) ExistByProblemID(problemID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "problemID", Value: problemID}}
+	count, err := mr.getProblemCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) IsProblemDeleted(problemID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "problemID", Value: problemID}}
+	var problem model.Problem
+	err := mr.getProblemCollection().FindOne(ctx, filter).Decode(&problem)
+	if err != nil {
+		logger.Logger.Error("failed to find problem by problemID", zap.Int64("problemID", problemID), zap.Error(err))
+		return true
+	}
+
+	return problem.Deleted
+}
+
+func (mr *MongoRepository) IsProblemAuthor(teacherID, problemID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "problemID", Value: problemID},
+		{Key: "authorID", Value: teacherID},
+	}
+	count, err := mr.getProblemCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) DeleteByProblemID(problemID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "problemID", Value: problemID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}}
+	_, err := mr.getProblemCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to delete problem", zap.Int64("problemID", problemID), zap.Error(err))
+		return fmt.Errorf("failed to delete problem: %w", err)
+	}
+
+	return nil
+}
