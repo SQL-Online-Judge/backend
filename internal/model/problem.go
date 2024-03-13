@@ -45,7 +45,7 @@ func (p *Problem) IsValidTimeLimit() bool {
 }
 
 func (p *Problem) IsValidMemoryLimit() bool {
-	return p.MemoryLimit >= 200 && p.MemoryLimit <= 1024
+	return p.MemoryLimit >= 200 && p.MemoryLimit <= 4096
 }
 
 func (p *Problem) IsValidProblem() bool {

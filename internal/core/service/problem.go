@@ -63,3 +63,24 @@ func (ps *ProblemService) DeleteProblem(teacherID, problemID int64) error {
 
 	return nil
 }
+
+func (ps *ProblemService) UpdateProblem(p *model.Problem) error {
+	if !ps.isProblemIDExist(p.ProblemID) {
+		return fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if ps.isProblemDeleted(p.ProblemID) {
+		return fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if !ps.checkProblemAuthor(p.AuthorID, p.ProblemID) {
+		return fmt.Errorf("%w", ErrNotProblemAuthor)
+	}
+
+	err := ps.repo.UpdateByProblemID(p)
+	if err != nil {
+		return fmt.Errorf("failed to update problem: %w", err)
+	}
+
+	return nil
+}

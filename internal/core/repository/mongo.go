@@ -474,3 +474,18 @@ func (mr *MongoRepository) DeleteByProblemID(problemID int64) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) UpdateByProblemID(p *model.Problem) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "problemID", Value: p.ProblemID}}
+	update := bson.D{{Key: "$set", Value: p}}
+	_, err := mr.getProblemCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to update problem", zap.Int64("problemID", p.ProblemID), zap.Error(err))
+		return fmt.Errorf("failed to update problem: %w", err)
+	}
+
+	return nil
+}

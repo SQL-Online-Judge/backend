@@ -39,7 +39,7 @@ type ProblemRepository interface {
 	IsProblemDeleted(problemID int64) bool
 	IsProblemAuthor(teacherID, problemID int64) bool
 	DeleteByProblemID(problemID int64) error
-	// UpdateProblemByProblemID(problemID int64, p *model.Problem) error
+	UpdateByProblemID(p *model.Problem) error
 	// FindProblemsByAuthorID(authorID int64) ([]*model.Problem, error)
 	// FindByProblemID(problemID int64) (*model.Problem, error)
 }
