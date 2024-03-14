@@ -47,12 +47,12 @@ type ProblemRepository interface {
 
 type AnswerRepository interface {
 	IsAnswerExist(problemID int64, dbName string) bool
-	CreateAnswer(a *model.Answer) (int64, error)
+	CreateAnswer(answer *model.Answer) (int64, error)
 	ExistByAnswerID(answerID int64) bool
 	IsAnswerDeleted(answerID int64) bool
 	DeleteByAnswerID(answerID int64) error
 	IsAnswerOfProblem(problemID, answerID int64) bool
-	// UpdateByAnswerID(a *model.Answer) error
+	UpdateAnswer(answer *model.Answer) error
 	// FindByAnswerID(answerID int64) (*model.Answer, error)
 	// FindAnswersByProblemID(problemID int64) ([]*model.Answer, error)
 	// FindAnswersByAuthorID(authorID int64) ([]*model.Answer, error)

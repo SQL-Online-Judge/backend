@@ -658,3 +658,23 @@ func (mr *MongoRepository) IsAnswerOfProblem(problemID, answerID int64) bool {
 
 	return count > 0
 }
+
+func (mr *MongoRepository) UpdateAnswer(answer *model.Answer) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "answerID", Value: answer.AnswerID}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "prepareSQL", Value: answer.PrepareSQL},
+		{Key: "answerSQL", Value: answer.AnswerSQL},
+		{Key: "judgeSQL", Value: answer.JudgeSQL},
+		{Key: "isReady", Value: false},
+	}}}
+	_, err := mr.getAnswerCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to update answer", zap.Int64("answerID", answer.AnswerID), zap.Error(err))
+		return fmt.Errorf("failed to update answer: %w", err)
+	}
+
+	return nil
+}

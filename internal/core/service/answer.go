@@ -66,7 +66,7 @@ func (as *AnswerService) CreateAnswer(teacherID int64, ps *ProblemService, answe
 	return answerID, nil
 }
 
-func (as *AnswerService) DeleteAnswer(teacherID int64, ps *ProblemService, problemID, answerID int64) error {
+func (as *AnswerService) checkUpdateAnswer(teacherID int64, ps *ProblemService, problemID, answerID int64) error {
 	if !ps.isProblemIDExist(problemID) {
 		return fmt.Errorf("%w", ErrProblemNotFound)
 	}
@@ -91,9 +91,35 @@ func (as *AnswerService) DeleteAnswer(teacherID int64, ps *ProblemService, probl
 		return fmt.Errorf("%w", ErrNotAnswerOfProblem)
 	}
 
-	err := as.repo.DeleteByAnswerID(answerID)
+	return nil
+}
+
+func (as *AnswerService) DeleteAnswer(teacherID int64, ps *ProblemService, problemID, answerID int64) error {
+	err := as.checkUpdateAnswer(teacherID, ps, problemID, answerID)
+	if err != nil {
+		return err
+	}
+
+	err = as.repo.DeleteByAnswerID(answerID)
 	if err != nil {
 		return fmt.Errorf("failed to delete answer: %w", err)
+	}
+
+	return nil
+}
+
+func (as *AnswerService) UpdateAnswer(teacherID int64, ps *ProblemService, answer *model.Answer) error {
+	problemID := answer.ProblemID
+	answerID := answer.AnswerID
+
+	err := as.checkUpdateAnswer(teacherID, ps, problemID, answerID)
+	if err != nil {
+		return err
+	}
+
+	err = as.repo.UpdateAnswer(answer)
+	if err != nil {
+		return fmt.Errorf("failed to update answer: %w", err)
 	}
 
 	return nil

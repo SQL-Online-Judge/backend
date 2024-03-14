@@ -38,8 +38,13 @@ func (a *Answer) IsValidAnswerSQL() bool {
 	return sqlLen >= 2 && sqlLen <= 65536
 }
 
+func (a *Answer) IsValidJudgeSQL() bool {
+	sqlLen := utf8.RuneCountInString(a.JudgeSQL)
+	return sqlLen <= 65536
+}
+
 func (a *Answer) IsValidAnswer() bool {
-	return a.IsValidDBName() && a.IsValidPrepareSQL() && a.IsValidAnswerSQL()
+	return a.IsValidDBName() && a.IsValidPrepareSQL() && a.IsValidAnswerSQL() && a.IsValidJudgeSQL()
 }
 
 func NewAnswer(a *Answer) *Answer {
