@@ -678,3 +678,32 @@ func (mr *MongoRepository) UpdateAnswer(answer *model.Answer) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) FindAnswersByProblemID(problemID int64) ([]*model.Answer, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "problemID", Value: problemID},
+		{Key: "deleted", Value: false},
+	}
+	cursor, err := mr.getAnswerCollection().Find(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to get answers", zap.Error(err))
+		return nil, fmt.Errorf("failed to get answers: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var answers []*model.Answer
+	for cursor.Next(ctx) {
+		var answer model.Answer
+		err := cursor.Decode(&answer)
+		if err != nil {
+			logger.Logger.Error("failed to decode answer", zap.Error(err))
+			return nil, fmt.Errorf("failed to decode answer: %w", err)
+		}
+		answers = append(answers, &answer)
+	}
+
+	return answers, nil
+}

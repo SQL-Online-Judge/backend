@@ -124,3 +124,20 @@ func (as *AnswerService) UpdateAnswer(teacherID int64, ps *ProblemService, answe
 
 	return nil
 }
+
+func (as *AnswerService) GetAnswers(ps *ProblemService, problemID int64) ([]*model.Answer, error) {
+	if !ps.isProblemIDExist(problemID) {
+		return nil, fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if ps.isProblemDeleted(problemID) {
+		return nil, fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	answers, err := as.repo.FindAnswersByProblemID(problemID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get answers: %w", err)
+	}
+
+	return answers, nil
+}

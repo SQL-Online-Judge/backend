@@ -53,8 +53,6 @@ type AnswerRepository interface {
 	DeleteByAnswerID(answerID int64) error
 	IsAnswerOfProblem(problemID, answerID int64) bool
 	UpdateAnswer(answer *model.Answer) error
+	FindAnswersByProblemID(problemID int64) ([]*model.Answer, error)
 	// FindByAnswerID(answerID int64) (*model.Answer, error)
-	// FindAnswersByProblemID(problemID int64) ([]*model.Answer, error)
-	// FindAnswersByAuthorID(authorID int64) ([]*model.Answer, error)
-	// FindAnswers(contains string) ([]*model.Answer, error)
 }
