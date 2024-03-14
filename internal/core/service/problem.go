@@ -84,3 +84,20 @@ func (ps *ProblemService) UpdateProblem(p *model.Problem) error {
 
 	return nil
 }
+
+func (ps *ProblemService) GetProblem(problemID int64) (*model.Problem, error) {
+	if !ps.isProblemIDExist(problemID) {
+		return nil, fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if ps.isProblemDeleted(problemID) {
+		return nil, fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	problem, err := ps.repo.FindByProblemID(problemID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get problem: %w", err)
+	}
+
+	return problem, nil
+}

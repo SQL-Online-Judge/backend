@@ -489,3 +489,18 @@ func (mr *MongoRepository) UpdateByProblemID(p *model.Problem) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) FindByProblemID(problemID int64) (*model.Problem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "problemID", Value: problemID}}
+	var problem model.Problem
+	err := mr.getProblemCollection().FindOne(ctx, filter).Decode(&problem)
+	if err != nil {
+		logger.Logger.Error("failed to find problem by problemID", zap.Int64("problemID", problemID), zap.Error(err))
+		return nil, fmt.Errorf("failed to find problem by problemID: %w", err)
+	}
+
+	return &problem, nil
+}
