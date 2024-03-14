@@ -61,6 +61,7 @@ func getStudents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp.Students = make([]*student, 0, len(students))
 	for _, s := range students {
 		resp.Students = append(resp.Students, newStudentFromModel(s))
 	}

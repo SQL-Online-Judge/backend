@@ -504,3 +504,61 @@ func (mr *MongoRepository) FindByProblemID(problemID int64) (*model.Problem, err
 
 	return &problem, nil
 }
+
+func (mr *MongoRepository) FindProblems(contains string) ([]*model.Problem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "title", Value: bson.D{{Key: "$regex", Value: primitive.Regex{Pattern: contains, Options: "i"}}}},
+		{Key: "deleted", Value: false},
+	}
+	cursor, err := mr.getProblemCollection().Find(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to get problems", zap.Error(err))
+		return nil, fmt.Errorf("failed to get problems: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var problems []*model.Problem
+	for cursor.Next(ctx) {
+		var problem model.Problem
+		err := cursor.Decode(&problem)
+		if err != nil {
+			logger.Logger.Error("failed to decode problem", zap.Error(err))
+			return nil, fmt.Errorf("failed to decode problem: %w", err)
+		}
+		problems = append(problems, &problem)
+	}
+
+	return problems, nil
+}
+
+func (mr *MongoRepository) FindProblemsByAuthorID(authorID int64) ([]*model.Problem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "authorID", Value: authorID},
+		{Key: "deleted", Value: false},
+	}
+	cursor, err := mr.getProblemCollection().Find(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to get problems", zap.Error(err))
+		return nil, fmt.Errorf("failed to get problems: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var problems []*model.Problem
+	for cursor.Next(ctx) {
+		var problem model.Problem
+		err := cursor.Decode(&problem)
+		if err != nil {
+			logger.Logger.Error("failed to decode problem", zap.Error(err))
+			return nil, fmt.Errorf("failed to decode problem: %w", err)
+		}
+		problems = append(problems, &problem)
+	}
+
+	return problems, nil
+}

@@ -41,5 +41,6 @@ type ProblemRepository interface {
 	DeleteByProblemID(problemID int64) error
 	UpdateByProblemID(p *model.Problem) error
 	FindByProblemID(problemID int64) (*model.Problem, error)
-	// FindProblemsByAuthorID(authorID int64) ([]*model.Problem, error)
+	FindProblemsByAuthorID(authorID int64) ([]*model.Problem, error)
+	FindProblems(contains string) ([]*model.Problem, error)
 }

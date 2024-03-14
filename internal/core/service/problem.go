@@ -101,3 +101,23 @@ func (ps *ProblemService) GetProblem(problemID int64) (*model.Problem, error) {
 
 	return problem, nil
 }
+
+func (ps *ProblemService) GetProblems(contains string) ([]*model.Problem, error) {
+	problems, err := ps.repo.FindProblems(contains)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get problems: %w", err)
+	}
+
+	return problems, nil
+}
+
+func (ps *ProblemService) GetTeacherProblems(teacherID int64) ([]*model.Problem, error) {
+	problems, err := ps.repo.FindProblemsByAuthorID(teacherID)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get teacher problems: %w", err)
+	}
+
+	return problems, nil
+}
