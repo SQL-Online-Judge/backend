@@ -597,3 +597,64 @@ func (mr *MongoRepository) CreateAnswer(answer *model.Answer) (int64, error) {
 
 	return answer.AnswerID, nil
 }
+
+func (mr *MongoRepository) ExistByAnswerID(answerID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "answerID", Value: answerID}}
+	count, err := mr.getAnswerCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) IsAnswerDeleted(answerID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "answerID", Value: answerID}}
+	var answer model.Answer
+	err := mr.getAnswerCollection().FindOne(ctx, filter).Decode(&answer)
+	if err != nil {
+		logger.Logger.Error("failed to find answer by answerID", zap.Int64("answerID", answerID), zap.Error(err))
+		return true
+	}
+
+	return answer.Deleted
+}
+
+func (mr *MongoRepository) DeleteByAnswerID(answerID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "answerID", Value: answerID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}}
+	_, err := mr.getAnswerCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to delete answer", zap.Int64("answerID", answerID), zap.Error(err))
+		return fmt.Errorf("failed to delete answer: %w", err)
+	}
+
+	return nil
+}
+
+func (mr *MongoRepository) IsAnswerOfProblem(problemID, answerID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "answerID", Value: answerID},
+		{Key: "problemID", Value: problemID},
+	}
+	count, err := mr.getAnswerCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
