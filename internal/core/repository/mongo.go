@@ -38,6 +38,10 @@ func (mr *MongoRepository) getProblemCollection() *mongo.Collection {
 	return mr.db.Collection("problem")
 }
 
+func (mr *MongoRepository) getAnswerCollection() *mongo.Collection {
+	return mr.db.Collection("answer")
+}
+
 func (mr *MongoRepository) ExistByUserID(userID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -561,4 +565,35 @@ func (mr *MongoRepository) FindProblemsByAuthorID(authorID int64) ([]*model.Prob
 	}
 
 	return problems, nil
+}
+
+func (mr *MongoRepository) IsAnswerExist(problemID int64, dbName string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "problemID", Value: problemID},
+		{Key: "dbName", Value: dbName},
+		{Key: "deleted", Value: false},
+	}
+	count, err := mr.getAnswerCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) CreateAnswer(answer *model.Answer) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := mr.getAnswerCollection().InsertOne(ctx, answer)
+	if err != nil {
+		logger.Logger.Error("failed to create answer", zap.Error(err))
+		return 0, fmt.Errorf("failed to create answer: %w", err)
+	}
+
+	return answer.AnswerID, nil
 }

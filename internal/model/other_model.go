@@ -2,18 +2,6 @@ package model
 
 import "time"
 
-type Answer struct {
-	AnswerID     int64  `bson:"answerID"`
-	ProblemID    int64  `bson:"problemID"`
-	DBName       string `bson:"dbName"`
-	PrepareSQL   string `bson:"prepareSQL"`
-	AnswerSQL    string `bson:"answerSQL"`
-	JudgeSQL     string `bson:"judgeSQL"`
-	AnswerOutput string `bson:"answerOutput"`
-	IsReady      bool   `bson:"isReady"`
-	ImageName    string `bson:"imageName"`
-}
-
 type ProblemSet struct {
 	ProblemSetID   int64   `bson:"problemSetID"`
 	AuthorID       int64   `bson:"authorID"`

@@ -18,6 +18,7 @@ var (
 	userService    *service.UserService
 	classService   *service.ClassService
 	problemService *service.ProblemService
+	answerService  *service.AnswerService
 )
 
 func init() {
@@ -27,6 +28,7 @@ func init() {
 	userService = service.NewUserService(repo)
 	classService = service.NewClassService(repo)
 	problemService = service.NewProblemService(repo)
+	answerService = service.NewAnswerService(repo)
 }
 
 func Serve() {
