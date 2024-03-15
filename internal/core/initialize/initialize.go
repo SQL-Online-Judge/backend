@@ -37,15 +37,13 @@ func createIndex() {
 			{"field": "username", "unique": "true"},
 			{"field": "deleted", "unique": "false"},
 		},
-		"class":            {{"field": "classID", "unique": "true"}},
-		"problem":          {{"field": "problemID", "unique": "true"}},
-		"answer":           {{"field": "answerID", "unique": "true"}},
-		"problemSet":       {{"field": "problemSetID", "unique": "true"}},
-		"classProblemSets": {{"field": "classProblemSetID", "unique": "true"}},
-		"task":             {{"field": "taskID", "unique": "true"}},
-		"submission":       {{"field": "submissionID", "unique": "true"}},
-		"message":          {{"field": "messageID", "unique": "true"}},
-		"messageBox":       {{"field": "userID", "unique": "true"}},
+		"class":      {{"field": "classID", "unique": "true"}},
+		"problem":    {{"field": "problemID", "unique": "true"}},
+		"answer":     {{"field": "answerID", "unique": "true"}},
+		"task":       {{"field": "taskID", "unique": "true"}},
+		"submission": {{"field": "submissionID", "unique": "true"}},
+		"message":    {{"field": "messageID", "unique": "true"}},
+		"messageBox": {{"field": "userID", "unique": "true"}},
 	}
 
 	for collection, indexList := range collectionIndexList {

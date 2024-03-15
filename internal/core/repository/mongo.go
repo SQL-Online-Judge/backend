@@ -42,6 +42,10 @@ func (mr *MongoRepository) getAnswerCollection() *mongo.Collection {
 	return mr.db.Collection("answer")
 }
 
+func (mr *MongoRepository) getTaskCollection() *mongo.Collection {
+	return mr.db.Collection("task")
+}
+
 func (mr *MongoRepository) ExistByUserID(userID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -706,4 +710,17 @@ func (mr *MongoRepository) FindAnswersByProblemID(problemID int64) ([]*model.Ans
 	}
 
 	return answers, nil
+}
+
+func (mr *MongoRepository) CreateTask(task *model.Task) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := mr.getTaskCollection().InsertOne(ctx, task)
+	if err != nil {
+		logger.Logger.Error("failed to create task", zap.Error(err))
+		return 0, fmt.Errorf("failed to create task: %w", err)
+	}
+
+	return task.TaskID, nil
 }

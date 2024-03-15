@@ -56,3 +56,15 @@ type AnswerRepository interface {
 	FindAnswersByProblemID(problemID int64) ([]*model.Answer, error)
 	// FindByAnswerID(answerID int64) (*model.Answer, error)
 }
+
+type TaskRepository interface {
+	CreateTask(t *model.Task) (int64, error)
+	// ExistByTaskID(taskID int64) bool
+	// IsTaskDeleted(taskID int64) bool
+	// IsTaskAuthor(teacherID, taskID int64) bool
+	// DeleteByTaskID(taskID int64) error
+	// UpdateByTaskID(t *model.Task) error
+	// FindByTaskID(taskID int64) (*model.Task, error)
+	// FindTasksByAuthorID(authorID int64) ([]*model.Task, error)
+	// FindTasks(contains string) ([]*model.Task, error)
+}
