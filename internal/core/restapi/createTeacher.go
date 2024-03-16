@@ -77,7 +77,7 @@ func createTeacher(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	resp := createTeacherResponse{UserID: strconv.FormatInt(teacher.UserID, 10)}
 	w.Write(resp.toJSON())
 }

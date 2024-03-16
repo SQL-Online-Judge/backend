@@ -77,7 +77,7 @@ func (ps *ProblemService) UpdateProblem(p *model.Problem) error {
 		return fmt.Errorf("%w", ErrNotProblemAuthor)
 	}
 
-	err := ps.repo.UpdateByProblemID(p)
+	err := ps.repo.UpdateProblem(p)
 	if err != nil {
 		return fmt.Errorf("failed to update problem: %w", err)
 	}

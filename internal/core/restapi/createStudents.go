@@ -102,7 +102,7 @@ func createStudents(w http.ResponseWriter, r *http.Request) {
 		resp.Status = append(resp.Status, createStudentStatus{
 			UserID:   strconv.FormatInt(userID, 10),
 			Username: student.Username,
-			Code:     http.StatusCreated,
+			Code:     http.StatusOK,
 			Message:  "user created",
 		})
 		continue

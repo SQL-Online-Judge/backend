@@ -39,7 +39,7 @@ type ProblemRepository interface {
 	IsProblemDeleted(problemID int64) bool
 	IsProblemAuthor(teacherID, problemID int64) bool
 	DeleteByProblemID(problemID int64) error
-	UpdateByProblemID(p *model.Problem) error
+	UpdateProblem(p *model.Problem) error
 	FindByProblemID(problemID int64) (*model.Problem, error)
 	FindProblemsByAuthorID(authorID int64) ([]*model.Problem, error)
 	FindProblems(contains string) ([]*model.Problem, error)
@@ -63,7 +63,7 @@ type TaskRepository interface {
 	IsTaskDeleted(taskID int64) bool
 	IsTaskAuthor(teacherID, taskID int64) bool
 	DeleteByTaskID(taskID int64) error
-	// UpdateByTaskID(t *model.Task) error
+	UpdateTask(t *model.Task) error
 	// FindByTaskID(taskID int64) (*model.Task, error)
 	// FindTasksByAuthorID(authorID int64) ([]*model.Task, error)
 	// FindTasks(contains string) ([]*model.Task, error)

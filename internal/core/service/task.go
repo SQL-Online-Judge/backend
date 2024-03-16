@@ -63,3 +63,24 @@ func (ts *TaskService) DeleteTask(teacherID, taskID int64) error {
 
 	return nil
 }
+
+func (ts *TaskService) UpdateTask(task *model.Task) error {
+	if !ts.isTaskIDExist(task.TaskID) {
+		return fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if ts.isTaskDeleted(task.TaskID) {
+		return fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if !ts.checkTaskAuthor(task.AuthorID, task.TaskID) {
+		return fmt.Errorf("%w", ErrNotTaskAuthor)
+	}
+
+	err := ts.repo.UpdateTask(task)
+	if err != nil {
+		return fmt.Errorf("failed to update task: %w", err)
+	}
+
+	return nil
+}

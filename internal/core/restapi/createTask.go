@@ -11,14 +11,14 @@ import (
 	"go.uber.org/zap"
 )
 
-type createTaskRequest struct {
+type updateTaskRequest struct {
 	TaskName      string    `json:"taskName"`
 	IsTimeLimited bool      `json:"isTimeLimited"`
 	BeginTime     time.Time `json:"beginTime"`
 	EndTime       time.Time `json:"endTime"`
 }
 
-func (ctr *createTaskRequest) toTask() *model.Task {
+func (ctr *updateTaskRequest) toTask() *model.Task {
 	return &model.Task{
 		TaskName:      ctr.TaskName,
 		IsTimeLimited: ctr.IsTimeLimited,
@@ -27,12 +27,12 @@ func (ctr *createTaskRequest) toTask() *model.Task {
 	}
 }
 
-type createTaskResponse struct {
+type updateTaskResponse struct {
 	TaskID string         `json:"taskID,omitempty"`
 	Error  *errorResponse `json:"error,omitempty"`
 }
 
-func (ctr *createTaskResponse) toJSON() []byte {
+func (ctr *updateTaskResponse) toJSON() []byte {
 	res, err := json.Marshal(ctr)
 	if err != nil {
 		logger.Logger.Error("failed to marshal create task response", zap.Error(err))
@@ -44,9 +44,9 @@ func (ctr *createTaskResponse) toJSON() []byte {
 
 func createTask(w http.ResponseWriter, r *http.Request) {
 	requestID := getRequestID(r)
-	var resp createTaskResponse
+	var resp updateTaskResponse
 
-	var req createTaskRequest
+	var req updateTaskRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -82,7 +82,7 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	resp.TaskID = strconv.FormatInt(taskID, 10)
 	w.Write(resp.toJSON())
 }

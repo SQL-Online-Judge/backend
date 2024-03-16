@@ -483,7 +483,7 @@ func (mr *MongoRepository) DeleteByProblemID(problemID int64) error {
 	return nil
 }
 
-func (mr *MongoRepository) UpdateByProblemID(p *model.Problem) error {
+func (mr *MongoRepository) UpdateProblem(p *model.Problem) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -781,6 +781,26 @@ func (mr *MongoRepository) DeleteByTaskID(taskID int64) error {
 	if err != nil {
 		logger.Logger.Error("failed to delete task", zap.Int64("taskID", taskID), zap.Error(err))
 		return fmt.Errorf("failed to delete task: %w", err)
+	}
+
+	return nil
+}
+
+func (mr *MongoRepository) UpdateTask(task *model.Task) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "taskID", Value: task.TaskID}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "taskName", Value: task.TaskName},
+		{Key: "isTimeLimited", Value: task.IsTimeLimited},
+		{Key: "beginTime", Value: task.BeginTime},
+		{Key: "endTime", Value: task.EndTime},
+	}}}
+	_, err := mr.getTaskCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to update task", zap.Int64("taskID", task.TaskID), zap.Error(err))
+		return fmt.Errorf("failed to update task: %w", err)
 	}
 
 	return nil
