@@ -724,3 +724,64 @@ func (mr *MongoRepository) CreateTask(task *model.Task) (int64, error) {
 
 	return task.TaskID, nil
 }
+
+func (mr *MongoRepository) ExistByTaskID(taskID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "taskID", Value: taskID}}
+	count, err := mr.getTaskCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) IsTaskDeleted(taskID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "taskID", Value: taskID}}
+	var task model.Task
+	err := mr.getTaskCollection().FindOne(ctx, filter).Decode(&task)
+	if err != nil {
+		logger.Logger.Error("failed to find task by taskID", zap.Int64("taskID", taskID), zap.Error(err))
+		return true
+	}
+
+	return task.Deleted
+}
+
+func (mr *MongoRepository) IsTaskAuthor(teacherID, taskID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "taskID", Value: taskID},
+		{Key: "authorID", Value: teacherID},
+	}
+	count, err := mr.getTaskCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) DeleteByTaskID(taskID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "taskID", Value: taskID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "deleted", Value: true}}}}
+	_, err := mr.getTaskCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to delete task", zap.Int64("taskID", taskID), zap.Error(err))
+		return fmt.Errorf("failed to delete task: %w", err)
+	}
+
+	return nil
+}

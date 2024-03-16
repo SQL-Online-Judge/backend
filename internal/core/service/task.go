@@ -30,3 +30,36 @@ func (ts *TaskService) CreateTask(task *model.Task) (int64, error) {
 
 	return taskID, nil
 }
+
+func (ts *TaskService) isTaskIDExist(taskID int64) bool {
+	return ts.repo.ExistByTaskID(taskID)
+}
+
+func (ts *TaskService) isTaskDeleted(taskID int64) bool {
+	return ts.repo.IsTaskDeleted(taskID)
+}
+
+func (ts *TaskService) checkTaskAuthor(teacherID, taskID int64) bool {
+	return ts.repo.IsTaskAuthor(teacherID, taskID)
+}
+
+func (ts *TaskService) DeleteTask(teacherID, taskID int64) error {
+	if !ts.isTaskIDExist(taskID) {
+		return fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if ts.isTaskDeleted(taskID) {
+		return fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if !ts.checkTaskAuthor(teacherID, taskID) {
+		return fmt.Errorf("%w", ErrNotTaskAuthor)
+	}
+
+	err := ts.repo.DeleteByTaskID(taskID)
+	if err != nil {
+		return fmt.Errorf("failed to delete task: %w", err)
+	}
+
+	return nil
+}

@@ -59,10 +59,10 @@ type AnswerRepository interface {
 
 type TaskRepository interface {
 	CreateTask(t *model.Task) (int64, error)
-	// ExistByTaskID(taskID int64) bool
-	// IsTaskDeleted(taskID int64) bool
-	// IsTaskAuthor(teacherID, taskID int64) bool
-	// DeleteByTaskID(taskID int64) error
+	ExistByTaskID(taskID int64) bool
+	IsTaskDeleted(taskID int64) bool
+	IsTaskAuthor(teacherID, taskID int64) bool
+	DeleteByTaskID(taskID int64) error
 	// UpdateByTaskID(t *model.Task) error
 	// FindByTaskID(taskID int64) (*model.Task, error)
 	// FindTasksByAuthorID(authorID int64) ([]*model.Task, error)

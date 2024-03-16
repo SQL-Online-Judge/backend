@@ -60,6 +60,7 @@ func NewRouter() *chi.Mux {
 				r.Get("/problems/{problemID}/answers", getAnswers)
 
 				r.Post("/tasks", createTask)
+				r.Delete("/tasks/{taskID}", deleteTask)
 			})
 		})
 	})
