@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	ErrTaskNotFound  = fmt.Errorf("task not found")
-	ErrNotTaskAuthor = fmt.Errorf("not the author of the task")
+	ErrTaskNotFound            = fmt.Errorf("task not found")
+	ErrNotTaskAuthor           = fmt.Errorf("not the author of the task")
+	ErrTaskProblemAlreadyExist = fmt.Errorf("task problem already exist")
+	ErrTaskProblemNotFound     = fmt.Errorf("task problem not found")
 )
 
 type TaskService struct {
@@ -83,4 +85,90 @@ func (ts *TaskService) UpdateTask(task *model.Task) error {
 	}
 
 	return nil
+}
+
+func (ts *TaskService) isTaskProblem(taskID, problemID int64) bool {
+	return ts.repo.IsTaskProblem(taskID, problemID)
+}
+
+func (ts *TaskService) AddTaskProblems(ps *ProblemService, teacherID, taskID int64, problems []*model.TaskProblem) (map[int64]error, error) {
+	if !ts.isTaskIDExist(taskID) {
+		return nil, fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if ts.isTaskDeleted(taskID) {
+		return nil, fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if !ts.checkTaskAuthor(teacherID, taskID) {
+		return nil, fmt.Errorf("%w", ErrNotTaskAuthor)
+	}
+
+	errs := make(map[int64]error)
+	for _, problem := range problems {
+		if !ps.isProblemIDExist(problem.ProblemID) {
+			errs[problem.ProblemID] = fmt.Errorf("%w", ErrProblemNotFound)
+			continue
+		}
+
+		if ps.isProblemDeleted(problem.ProblemID) {
+			errs[problem.ProblemID] = fmt.Errorf("%w", ErrProblemNotFound)
+			continue
+		}
+
+		if ts.isTaskProblem(taskID, problem.ProblemID) {
+			errs[problem.ProblemID] = fmt.Errorf("%w", ErrTaskProblemAlreadyExist)
+			continue
+		}
+
+		err := ts.repo.AddTaskProblem(taskID, problem)
+		if err != nil {
+			errs[problem.ProblemID] = fmt.Errorf("failed to add task problem: %w", err)
+		} else {
+			errs[problem.ProblemID] = nil
+		}
+	}
+
+	return errs, nil
+}
+
+func (ts *TaskService) RemoveTaskProblems(ps *ProblemService, teacherID, taskID int64, problems []*model.TaskProblem) (map[int64]error, error) {
+	if !ts.isTaskIDExist(taskID) {
+		return nil, fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if ts.isTaskDeleted(taskID) {
+		return nil, fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if !ts.checkTaskAuthor(teacherID, taskID) {
+		return nil, fmt.Errorf("%w", ErrNotTaskAuthor)
+	}
+
+	errs := make(map[int64]error)
+	for _, problem := range problems {
+		if !ps.isProblemIDExist(problem.ProblemID) {
+			errs[problem.ProblemID] = fmt.Errorf("%w", ErrProblemNotFound)
+			continue
+		}
+
+		if ps.isProblemDeleted(problem.ProblemID) {
+			errs[problem.ProblemID] = fmt.Errorf("%w", ErrProblemNotFound)
+			continue
+		}
+
+		if !ts.isTaskProblem(taskID, problem.ProblemID) {
+			errs[problem.ProblemID] = fmt.Errorf("%w", ErrTaskProblemNotFound)
+			continue
+		}
+
+		err := ts.repo.RemoveTaskProblem(taskID, problem.ProblemID)
+		if err != nil {
+			errs[problem.ProblemID] = fmt.Errorf("failed to remove task problem: %w", err)
+		} else {
+			errs[problem.ProblemID] = nil
+		}
+	}
+
+	return errs, nil
 }

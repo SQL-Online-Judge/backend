@@ -18,6 +18,8 @@ linters:
     - funlen
     - interfacebloat
     - dupl
+    - goconst
+    - cyclop
     # deprecated linters
     - varcheck
     - interfacer

@@ -64,6 +64,9 @@ type TaskRepository interface {
 	IsTaskAuthor(teacherID, taskID int64) bool
 	DeleteByTaskID(taskID int64) error
 	UpdateTask(t *model.Task) error
+	IsTaskProblem(taskID, problemID int64) bool
+	AddTaskProblem(taskID int64, problem *model.TaskProblem) error
+	RemoveTaskProblem(taskID, problemID int64) error
 	// FindByTaskID(taskID int64) (*model.Task, error)
 	// FindTasksByAuthorID(authorID int64) ([]*model.Task, error)
 	// FindTasks(contains string) ([]*model.Task, error)

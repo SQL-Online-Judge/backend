@@ -805,3 +805,50 @@ func (mr *MongoRepository) UpdateTask(task *model.Task) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) IsTaskProblem(taskID, problemID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "taskID", Value: taskID},
+		{Key: "problems.problemID", Value: problemID},
+	}
+	count, err := mr.getTaskCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) AddTaskProblem(taskID int64, problem *model.TaskProblem) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "taskID", Value: taskID}}
+	update := bson.D{{Key: "$addToSet", Value: bson.D{{Key: "problems", Value: problem}}}}
+	_, err := mr.getTaskCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to add task problem", zap.Int64("taskID", taskID), zap.Int64("problemID", problem.ProblemID), zap.Error(err))
+		return fmt.Errorf("failed to add task problem: %w", err)
+	}
+
+	return nil
+}
+
+func (mr *MongoRepository) RemoveTaskProblem(taskID, problemID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "taskID", Value: taskID}}
+	update := bson.D{{Key: "$pull", Value: bson.D{{Key: "problems", Value: bson.D{{Key: "problemID", Value: problemID}}}}}}
+	_, err := mr.getTaskCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to remove task problem", zap.Int64("taskID", taskID), zap.Int64("problemID", problemID), zap.Error(err))
+		return fmt.Errorf("failed to remove task problem: %w", err)
+	}
+
+	return nil
+}
