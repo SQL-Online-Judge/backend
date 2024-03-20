@@ -172,3 +172,20 @@ func (ts *TaskService) RemoveTaskProblems(ps *ProblemService, teacherID, taskID 
 
 	return errs, nil
 }
+
+func (ts *TaskService) GetTask(taskID int64) (*model.Task, error) {
+	if !ts.isTaskIDExist(taskID) {
+		return nil, fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if ts.isTaskDeleted(taskID) {
+		return nil, fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	task, err := ts.repo.FindByTaskID(taskID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get task: %w", err)
+	}
+
+	return task, nil
+}

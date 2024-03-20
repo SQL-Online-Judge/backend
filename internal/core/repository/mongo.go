@@ -852,3 +852,18 @@ func (mr *MongoRepository) RemoveTaskProblem(taskID, problemID int64) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) FindByTaskID(taskID int64) (*model.Task, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "taskID", Value: taskID}}
+	var task model.Task
+	err := mr.getTaskCollection().FindOne(ctx, filter).Decode(&task)
+	if err != nil {
+		logger.Logger.Error("failed to find task by taskID", zap.Int64("taskID", taskID), zap.Error(err))
+		return nil, fmt.Errorf("failed to find task by taskID: %w", err)
+	}
+
+	return &task, nil
+}
