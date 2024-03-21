@@ -12,6 +12,8 @@ var (
 	ErrNotOfClassOwner       = fmt.Errorf("teacher is not the owner of the class")
 	ErrStudentAlreadyInClass = fmt.Errorf("student is already in the class")
 	ErrStudentNotInClass     = fmt.Errorf("student is not in the class")
+	ErrTaskAlreadyInClass    = fmt.Errorf("task is already in the class")
+	ErrTaskNotInClass        = fmt.Errorf("task is not in the class")
 )
 
 type ClassService struct {
@@ -187,4 +189,90 @@ func (cs *ClassService) GetStudentsInClass(teacherID, classID int64) ([]*model.U
 	}
 
 	return students, nil
+}
+
+func (cs *ClassService) isClassTask(classID, taskID int64) bool {
+	return cs.repo.IsClassTask(classID, taskID)
+}
+
+func (cs *ClassService) AddTasks(ts *TaskService, teacherID, classID int64, taskIDs []int64) (map[int64]error, error) {
+	if !cs.isClassIDExist(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if cs.isClassDeleted(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if !cs.checkClassOwner(teacherID, classID) {
+		return nil, fmt.Errorf("%w", ErrNotOfClassOwner)
+	}
+
+	errs := make(map[int64]error)
+	for _, taskID := range taskIDs {
+		if !ts.isTaskIDExist(taskID) {
+			errs[taskID] = fmt.Errorf("%w", ErrTaskNotFound)
+			continue
+		}
+
+		if ts.isTaskDeleted(taskID) {
+			errs[taskID] = fmt.Errorf("%w", ErrTaskNotFound)
+			continue
+		}
+
+		if cs.isClassTask(classID, taskID) {
+			errs[taskID] = fmt.Errorf("%w", ErrTaskAlreadyInClass)
+			continue
+		}
+
+		err := cs.repo.AddTaskToClass(classID, taskID)
+		if err != nil {
+			errs[taskID] = fmt.Errorf("failed to add task to class: %w", err)
+		} else {
+			errs[taskID] = nil
+		}
+	}
+
+	return errs, nil
+}
+
+func (cs *ClassService) RemoveTasks(ts *TaskService, teacherID, classID int64, taskIDs []int64) (map[int64]error, error) {
+	if !cs.isClassIDExist(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if cs.isClassDeleted(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if !cs.checkClassOwner(teacherID, classID) {
+		return nil, fmt.Errorf("%w", ErrNotOfClassOwner)
+	}
+
+	errs := make(map[int64]error)
+	for _, taskID := range taskIDs {
+		if !ts.isTaskIDExist(taskID) {
+			errs[taskID] = fmt.Errorf("%w", ErrTaskNotFound)
+			continue
+		}
+
+		if ts.isTaskDeleted(taskID) {
+			errs[taskID] = fmt.Errorf("%w", ErrTaskNotFound)
+			continue
+		}
+
+		if !cs.isClassTask(classID, taskID) {
+			errs[taskID] = fmt.Errorf("%w", ErrTaskNotInClass)
+			continue
+		}
+
+		err := cs.repo.RemoveTaskFromClass(classID, taskID)
+		if err != nil {
+			errs[taskID] = fmt.Errorf("failed to remove task from class: %w", err)
+		} else {
+			errs[taskID] = nil
+		}
+	}
+
+	return errs, nil
 }

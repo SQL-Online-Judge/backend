@@ -11,6 +11,7 @@ type Class struct {
 	ClassName string  `bson:"className"`
 	TeacherID int64   `bson:"teacherID"`
 	Students  []int64 `bson:"students"`
+	Tasks     []int64 `bson:"tasks"`
 	Deleted   bool    `bson:"deleted"`
 }
 
@@ -20,6 +21,7 @@ func NewClass(className string, teacherID int64) *Class {
 		ClassName: className,
 		TeacherID: teacherID,
 		Students:  []int64{},
+		Tasks:     []int64{},
 	}
 }
 

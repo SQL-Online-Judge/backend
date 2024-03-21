@@ -925,3 +925,50 @@ func (mr *MongoRepository) FindTasksByAuthorID(authorID int64) ([]*model.Task, e
 
 	return tasks, nil
 }
+
+func (mr *MongoRepository) IsClassTask(classID, taskID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "classID", Value: classID},
+		{Key: "tasks", Value: bson.D{{Key: "$in", Value: []int64{taskID}}}},
+	}
+	count, err := mr.getClassCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) AddTaskToClass(classID, taskID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "classID", Value: classID}}
+	update := bson.D{{Key: "$addToSet", Value: bson.D{{Key: "tasks", Value: taskID}}}}
+	_, err := mr.getClassCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to add task to class", zap.Int64("taskID", taskID), zap.Int64("classID", classID), zap.Error(err))
+		return fmt.Errorf("failed to add task to class: %w", err)
+	}
+
+	return nil
+}
+
+func (mr *MongoRepository) RemoveTaskFromClass(classID, taskID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "classID", Value: classID}}
+	update := bson.D{{Key: "$pull", Value: bson.D{{Key: "tasks", Value: taskID}}}}
+	_, err := mr.getClassCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to remove task from class", zap.Int64("taskID", taskID), zap.Int64("classID", classID), zap.Error(err))
+		return fmt.Errorf("failed to remove task from class: %w", err)
+	}
+
+	return nil
+}

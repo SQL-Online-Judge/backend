@@ -31,6 +31,9 @@ type ClassRepository interface {
 	AddStudentToClass(classID, studentID int64) error
 	RemoveStudentFromClass(classID, studentID int64) error
 	FindStudentsByClassID(classID int64) ([]*model.User, error)
+	IsClassTask(classID, taskID int64) bool
+	AddTaskToClass(classID, taskID int64) error
+	RemoveTaskFromClass(classID, taskID int64) error
 }
 
 type ProblemRepository interface {
