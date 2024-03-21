@@ -896,3 +896,32 @@ func (mr *MongoRepository) FindTasks(contains string) ([]*model.Task, error) {
 
 	return tasks, nil
 }
+
+func (mr *MongoRepository) FindTasksByAuthorID(authorID int64) ([]*model.Task, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "authorID", Value: authorID},
+		{Key: "deleted", Value: false},
+	}
+	cursor, err := mr.getTaskCollection().Find(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to get tasks", zap.Error(err))
+		return nil, fmt.Errorf("failed to get tasks: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var tasks []*model.Task
+	for cursor.Next(ctx) {
+		var task model.Task
+		err := cursor.Decode(&task)
+		if err != nil {
+			logger.Logger.Error("failed to decode task", zap.Error(err))
+			return nil, fmt.Errorf("failed to decode task: %w", err)
+		}
+		tasks = append(tasks, &task)
+	}
+
+	return tasks, nil
+}

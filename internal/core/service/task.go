@@ -198,3 +198,12 @@ func (ts *TaskService) GetTasks(contains string) ([]*model.Task, error) {
 
 	return tasks, nil
 }
+
+func (ts *TaskService) GetTeacherTasks(teacherID int64) ([]*model.Task, error) {
+	tasks, err := ts.repo.FindTasksByAuthorID(teacherID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get teacher tasks: %w", err)
+	}
+
+	return tasks, nil
+}
