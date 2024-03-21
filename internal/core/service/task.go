@@ -189,3 +189,12 @@ func (ts *TaskService) GetTask(taskID int64) (*model.Task, error) {
 
 	return task, nil
 }
+
+func (ts *TaskService) GetTasks(contains string) ([]*model.Task, error) {
+	tasks, err := ts.repo.FindTasks(contains)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tasks: %w", err)
+	}
+
+	return tasks, nil
+}

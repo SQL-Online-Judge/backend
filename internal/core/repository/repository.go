@@ -68,6 +68,6 @@ type TaskRepository interface {
 	AddTaskProblem(taskID int64, problem *model.TaskProblem) error
 	RemoveTaskProblem(taskID, problemID int64) error
 	FindByTaskID(taskID int64) (*model.Task, error)
+	FindTasks(contains string) ([]*model.Task, error)
 	// FindTasksByAuthorID(authorID int64) ([]*model.Task, error)
-	// FindTasks(contains string) ([]*model.Task, error)
 }
