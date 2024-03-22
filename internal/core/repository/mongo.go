@@ -972,3 +972,42 @@ func (mr *MongoRepository) RemoveTaskFromClass(classID, taskID int64) error {
 
 	return nil
 }
+
+func (mr *MongoRepository) GetTasksInClass(classID int64) ([]*model.Task, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{{Key: "classID", Value: classID}}}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "task"},
+			{Key: "localField", Value: "tasks"},
+			{Key: "foreignField", Value: "taskID"},
+			{Key: "as", Value: "tasks"},
+		}}},
+		{{Key: "$unwind", Value: "$tasks"}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 0},
+			{Key: "taskID", Value: "$tasks.taskID"},
+			{Key: "taskName", Value: "$tasks.taskName"},
+			{Key: "isTimeLimited", Value: "$tasks.isTimeLimited"},
+			{Key: "beginTime", Value: "$tasks.beginTime"},
+			{Key: "endTime", Value: "$tasks.endTime"},
+		}}},
+	}
+
+	cursor, err := mr.getClassCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		logger.Logger.Error("failed to aggregate", zap.Error(err))
+		return nil, fmt.Errorf("failed to aggregate: %w", err)
+	}
+
+	var tasks []*model.Task
+	err = cursor.All(ctx, &tasks)
+	if err != nil {
+		logger.Logger.Error("failed to decode tasks", zap.Error(err))
+		return nil, fmt.Errorf("failed to decode tasks: %w", err)
+	}
+
+	return tasks, nil
+}

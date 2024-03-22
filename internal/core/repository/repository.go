@@ -34,6 +34,7 @@ type ClassRepository interface {
 	IsClassTask(classID, taskID int64) bool
 	AddTaskToClass(classID, taskID int64) error
 	RemoveTaskFromClass(classID, taskID int64) error
+	GetTasksInClass(classID int64) ([]*model.Task, error)
 }
 
 type ProblemRepository interface {

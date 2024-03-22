@@ -70,6 +70,7 @@ func NewRouter() *chi.Mux {
 
 				r.Post("/classes/{classID}/tasks", addTasksToClass)
 				r.Delete("/classes/{classID}/tasks", removeTasksFromClass)
+				r.Get("/classes/{classID}/tasks", getTasksInClass)
 			})
 		})
 	})

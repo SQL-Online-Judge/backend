@@ -276,3 +276,24 @@ func (cs *ClassService) RemoveTasks(ts *TaskService, teacherID, classID int64, t
 
 	return errs, nil
 }
+
+func (cs *ClassService) GetTasksInClass(teacherID, classID int64) ([]*model.Task, error) {
+	if !cs.isClassIDExist(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if cs.isClassDeleted(classID) {
+		return nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if !cs.checkClassOwner(teacherID, classID) {
+		return nil, fmt.Errorf("%w", ErrNotOfClassOwner)
+	}
+
+	tasks, err := cs.repo.GetTasksInClass(classID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tasks in class: %w", err)
+	}
+
+	return tasks, nil
+}
