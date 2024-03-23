@@ -35,6 +35,7 @@ type ClassRepository interface {
 	AddTaskToClass(classID, taskID int64) error
 	RemoveTaskFromClass(classID, taskID int64) error
 	GetTasksInClass(classID int64) ([]*model.Task, error)
+	FindByClassID(classID int64) (*model.Class, error)
 }
 
 type ProblemRepository interface {

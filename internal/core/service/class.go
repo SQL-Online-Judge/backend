@@ -297,3 +297,34 @@ func (cs *ClassService) GetTasksInClass(teacherID, classID int64) ([]*model.Task
 
 	return tasks, nil
 }
+
+func (cs *ClassService) GetClass(teacherID, classID int64) (*model.Class, []*model.User, []*model.Task, error) {
+	if !cs.isClassIDExist(classID) {
+		return nil, nil, nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if cs.isClassDeleted(classID) {
+		return nil, nil, nil, fmt.Errorf("%w", ErrClassNotFound)
+	}
+
+	if !cs.checkClassOwner(teacherID, classID) {
+		return nil, nil, nil, fmt.Errorf("%w", ErrNotOfClassOwner)
+	}
+
+	class, err := cs.repo.FindByClassID(classID)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to get class: %w", err)
+	}
+
+	students, err := cs.repo.FindStudentsByClassID(classID)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to get students in class: %w", err)
+	}
+
+	tasks, err := cs.repo.GetTasksInClass(classID)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to get tasks in class: %w", err)
+	}
+
+	return class, students, tasks, nil
+}

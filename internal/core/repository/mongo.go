@@ -1011,3 +1011,18 @@ func (mr *MongoRepository) GetTasksInClass(classID int64) ([]*model.Task, error)
 
 	return tasks, nil
 }
+
+func (mr *MongoRepository) FindByClassID(classID int64) (*model.Class, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "classID", Value: classID}}
+	var class model.Class
+	err := mr.getClassCollection().FindOne(ctx, filter).Decode(&class)
+	if err != nil {
+		logger.Logger.Error("failed to find class by classID", zap.Int64("classID", classID), zap.Error(err))
+		return nil, fmt.Errorf("failed to find class by classID: %w", err)
+	}
+
+	return &class, nil
+}
