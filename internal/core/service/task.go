@@ -207,3 +207,16 @@ func (ts *TaskService) GetTeacherTasks(teacherID int64) ([]*model.Task, error) {
 
 	return tasks, nil
 }
+
+func (ts *TaskService) GetStudentTasks(us *UserService, studentID int64) ([]*model.Task, error) {
+	if err := us.isStudentExist(studentID); err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	tasks, err := ts.repo.FindTasksByStudentID(studentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get student tasks: %w", err)
+	}
+
+	return tasks, nil
+}

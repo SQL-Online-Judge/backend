@@ -75,4 +75,5 @@ type TaskRepository interface {
 	FindByTaskID(taskID int64) (*model.Task, error)
 	FindTasks(contains string) ([]*model.Task, error)
 	FindTasksByAuthorID(authorID int64) ([]*model.Task, error)
+	FindTasksByStudentID(studentID int64) ([]*model.Task, error)
 }

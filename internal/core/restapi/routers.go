@@ -74,6 +74,11 @@ func NewRouter() *chi.Mux {
 				r.Get("/classes/{classID}", getClass)
 			})
 		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(checkRole("student"))
+			r.Get("/tasks", getStudentTasks)
+		})
 	})
 
 	return r
