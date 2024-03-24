@@ -12,6 +12,7 @@ var (
 	ErrNotTaskAuthor           = fmt.Errorf("not the author of the task")
 	ErrTaskProblemAlreadyExist = fmt.Errorf("task problem already exist")
 	ErrTaskProblemNotFound     = fmt.Errorf("task problem not found")
+	ErrCannotAccessTask        = fmt.Errorf("cannot access task")
 )
 
 type TaskService struct {
@@ -219,4 +220,42 @@ func (ts *TaskService) GetStudentTasks(us *UserService, studentID int64) ([]*mod
 	}
 
 	return tasks, nil
+}
+
+func (ts *TaskService) canStudentAccessTask(us *UserService, studentID, taskID int64) error {
+	if err := us.isStudentExist(studentID); err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	if !ts.isTaskIDExist(taskID) {
+		return fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if ts.isTaskDeleted(taskID) {
+		return fmt.Errorf("%w", ErrTaskNotFound)
+	}
+
+	if !ts.repo.CanStudentAccessTask(studentID, taskID) {
+		return fmt.Errorf("%w", ErrCannotAccessTask)
+	}
+
+	return nil
+}
+
+func (ts *TaskService) GetStudentTaskProblems(us *UserService, studentID, taskID int64) ([]*model.TaskProblem, []*model.Problem, error) {
+	if err := ts.canStudentAccessTask(us, studentID, taskID); err != nil {
+		return nil, nil, err
+	}
+
+	taskProblems, err := ts.repo.FindTaskProblemsByStudentIDAndTaskID(studentID, taskID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get student task problems: %w", err)
+	}
+
+	problems, err := ts.repo.FindProblemsInStudentTask(studentID, taskID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get problems in student task: %w", err)
+	}
+
+	return taskProblems, problems, nil
 }

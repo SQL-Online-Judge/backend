@@ -398,6 +398,7 @@ func (mr *MongoRepository) FindStudentsByClassID(classID int64) ([]*model.User, 
 		logger.Logger.Error("failed to aggregate", zap.Error(err))
 		return nil, fmt.Errorf("failed to aggregate: %w", err)
 	}
+	defer cursor.Close(ctx)
 
 	var students []*model.User
 	err = cursor.All(ctx, &students)
@@ -1001,6 +1002,7 @@ func (mr *MongoRepository) GetTasksInClass(classID int64) ([]*model.Task, error)
 		logger.Logger.Error("failed to aggregate", zap.Error(err))
 		return nil, fmt.Errorf("failed to aggregate: %w", err)
 	}
+	defer cursor.Close(ctx)
 
 	var tasks []*model.Task
 	err = cursor.All(ctx, &tasks)
@@ -1027,11 +1029,8 @@ func (mr *MongoRepository) FindByClassID(classID int64) (*model.Class, error) {
 	return &class, nil
 }
 
-func (mr *MongoRepository) FindTasksByStudentID(studentID int64) ([]*model.Task, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	pipeline := mongo.Pipeline{
+func (mr *MongoRepository) getStudentTasksPipeline(studentID int64) mongo.Pipeline {
+	return mongo.Pipeline{
 		{{Key: "$match", Value: bson.D{{Key: "students", Value: studentID}}}},
 		{{Key: "$unwind", Value: "$tasks"}},
 		{{Key: "$group", Value: bson.D{
@@ -1049,17 +1048,25 @@ func (mr *MongoRepository) FindTasksByStudentID(studentID int64) ([]*model.Task,
 			{Key: "_id", Value: 0},
 			{Key: "taskID", Value: "$tasks.taskID"},
 			{Key: "taskName", Value: "$tasks.taskName"},
+			{Key: "problems", Value: "$tasks.problems"},
 			{Key: "isTimeLimited", Value: "$tasks.isTimeLimited"},
 			{Key: "beginTime", Value: "$tasks.beginTime"},
 			{Key: "endTime", Value: "$tasks.endTime"},
 		}}},
 	}
+}
 
+func (mr *MongoRepository) FindTasksByStudentID(studentID int64) ([]*model.Task, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mr.getStudentTasksPipeline(studentID)
 	cursor, err := mr.getClassCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		logger.Logger.Error("failed to aggregate", zap.Error(err))
 		return nil, fmt.Errorf("failed to aggregate: %w", err)
 	}
+	defer cursor.Close(ctx)
 
 	var tasks []*model.Task
 	err = cursor.All(ctx, &tasks)
@@ -1069,4 +1076,104 @@ func (mr *MongoRepository) FindTasksByStudentID(studentID int64) ([]*model.Task,
 	}
 
 	return tasks, nil
+}
+
+func (mr *MongoRepository) CanStudentAccessTask(studentID, taskID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "students", Value: studentID},
+		{Key: "tasks", Value: taskID},
+		{Key: "deleted", Value: false},
+	}
+	count, err := mr.getClassCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) getStudentTaskProblemsPipeline(studentID, taskID int64) mongo.Pipeline {
+	pipeline := mr.getStudentTasksPipeline(studentID)
+	pipeline = append(pipeline, mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{{Key: "taskID", Value: taskID}}}},
+		{{Key: "$unwind", Value: "$problems"}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "problemID", Value: "$problems.problemID"},
+			{Key: "score", Value: "$problems.score"},
+		}}},
+	}...)
+	return pipeline
+}
+
+func (mr *MongoRepository) FindTaskProblemsByStudentIDAndTaskID(studentID, taskID int64) ([]*model.TaskProblem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mr.getStudentTaskProblemsPipeline(studentID, taskID)
+
+	cursor, err := mr.getClassCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		logger.Logger.Error("failed to aggregate", zap.Error(err))
+		return nil, fmt.Errorf("failed to aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var taskProblems []*model.TaskProblem
+	err = cursor.All(ctx, &taskProblems)
+	if err != nil {
+		logger.Logger.Error("failed to decode task", zap.Error(err))
+		return nil, fmt.Errorf("failed to decode task: %w", err)
+	}
+
+	return taskProblems, nil
+}
+
+func (mr *MongoRepository) getProblemsInStudentTaskPipeline(studentID, taskID int64) mongo.Pipeline {
+	pipeline := mr.getStudentTaskProblemsPipeline(studentID, taskID)
+	pipeline = append(pipeline, mongo.Pipeline{
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "problem"},
+			{Key: "localField", Value: "problemID"},
+			{Key: "foreignField", Value: "problemID"},
+			{Key: "as", Value: "problems"},
+		}}},
+		{{Key: "$unwind", Value: "$problems"}},
+		{{Key: "$match", Value: bson.D{{Key: "problems.deleted", Value: false}}}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "problemID", Value: "$problems.problemID"},
+			{Key: "title", Value: "$problems.title"},
+			{Key: "tags", Value: "$problems.tags"},
+			{Key: "content", Value: "$problems.content"},
+			{Key: "timeLimit", Value: "$problems.timeLimit"},
+			{Key: "memoryLimit", Value: "$problems.memoryLimit"},
+		}}},
+	}...)
+	return pipeline
+}
+
+func (mr *MongoRepository) FindProblemsInStudentTask(studentID, taskID int64) ([]*model.Problem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mr.getProblemsInStudentTaskPipeline(studentID, taskID)
+
+	cursor, err := mr.getClassCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		logger.Logger.Error("failed to aggregate", zap.Error(err))
+		return nil, fmt.Errorf("failed to aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var problems []*model.Problem
+	err = cursor.All(ctx, &problems)
+	if err != nil {
+		logger.Logger.Error("failed to decode problems", zap.Error(err))
+		return nil, fmt.Errorf("failed to decode problems: %w", err)
+	}
+
+	return problems, nil
 }
