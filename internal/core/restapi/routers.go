@@ -80,6 +80,7 @@ func NewRouter() *chi.Mux {
 			r.Get("/tasks", getStudentTasks)
 			r.Get("/tasks/{taskID}/problems", getStudentTaskProblems)
 			r.Get("/tasks/{taskID}/problems/{problemID}", getStudentTaskProblem)
+			r.Post("/tasks/{taskID}/problems/{problemID}/submissions", createStudentSubmission)
 		})
 	})
 

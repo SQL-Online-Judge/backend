@@ -13,6 +13,7 @@ var (
 	ErrTaskProblemAlreadyExist = fmt.Errorf("task problem already exist")
 	ErrTaskProblemNotFound     = fmt.Errorf("task problem not found")
 	ErrCannotAccessTask        = fmt.Errorf("cannot access task")
+	ErrNotInSubmitTime         = fmt.Errorf("not in submit time")
 )
 
 type TaskService struct {
@@ -275,4 +276,37 @@ func (ts *TaskService) GetStudentTaskProblem(us *UserService, ps *ProblemService
 	}
 
 	return problem, nil
+}
+
+func (ts *TaskService) isInSubmitTime(taskID int64) bool {
+	return ts.repo.IsInSubmitTime(taskID)
+}
+
+func (ts *TaskService) CreateStudentSubmission(us *UserService, ps *ProblemService, ss *SubmissionService, submission *model.Submission) (int64, error) {
+	if err := ts.canStudentAccessTask(us, submission.SubmitterID, submission.TaskID); err != nil {
+		return 0, fmt.Errorf("%w", err)
+	}
+
+	if !ts.isTaskProblem(submission.TaskID, submission.ProblemID) {
+		return 0, fmt.Errorf("%w", ErrTaskProblemNotFound)
+	}
+
+	if !ps.isProblemIDExist(submission.ProblemID) {
+		return 0, fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if ps.isProblemDeleted(submission.ProblemID) {
+		return 0, fmt.Errorf("%w", ErrProblemNotFound)
+	}
+
+	if !ts.isInSubmitTime(submission.TaskID) {
+		return 0, fmt.Errorf("%w", ErrNotInSubmitTime)
+	}
+
+	submissionID, err := ss.CreateSubmission(submission)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create submission: %w", err)
+	}
+
+	return submissionID, nil
 }

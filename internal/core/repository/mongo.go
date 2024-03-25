@@ -46,6 +46,10 @@ func (mr *MongoRepository) getTaskCollection() *mongo.Collection {
 	return mr.db.Collection("task")
 }
 
+func (mr *MongoRepository) getSubmissionCollection() *mongo.Collection {
+	return mr.db.Collection("submission")
+}
+
 func (mr *MongoRepository) ExistByUserID(userID int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -1168,4 +1172,43 @@ func (mr *MongoRepository) FindProblemsByTaskID(taskID int64) ([]*model.Problem,
 	}
 
 	return problems, nil
+}
+
+func (mr *MongoRepository) IsInSubmitTime(taskID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "taskID", Value: taskID},
+		{Key: "$or", Value: []bson.D{
+			{
+				{Key: "isTimeLimited", Value: false},
+			},
+			{
+				{Key: "isTimeLimited", Value: true},
+				{Key: "beginTime", Value: bson.D{{Key: "$lt", Value: time.Now()}}},
+				{Key: "endTime", Value: bson.D{{Key: "$gt", Value: time.Now()}}},
+			},
+		}},
+	}
+	count, err := mr.getTaskCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) CreateSubmission(submission *model.Submission) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := mr.getSubmissionCollection().InsertOne(ctx, submission)
+	if err != nil {
+		logger.Logger.Error("failed to create submission", zap.Error(err))
+		return 0, fmt.Errorf("failed to create submission: %w", err)
+	}
+
+	return submission.SubmissionID, nil
 }

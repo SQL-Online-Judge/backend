@@ -79,4 +79,9 @@ type TaskRepository interface {
 	CanStudentAccessTask(studentID, taskID int64) bool
 	FindTaskProblemsByTaskID(taskID int64) ([]*model.TaskProblem, error)
 	FindProblemsByTaskID(taskID int64) ([]*model.Problem, error)
+	IsInSubmitTime(taskID int64) bool
+}
+
+type SubmissionRepository interface {
+	CreateSubmission(s *model.Submission) (int64, error)
 }

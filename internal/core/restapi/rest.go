@@ -15,11 +15,12 @@ var tokenAuth *jwtauth.JWTAuth
 var repo *repository.MongoRepository
 
 var (
-	userService    *service.UserService
-	classService   *service.ClassService
-	problemService *service.ProblemService
-	answerService  *service.AnswerService
-	taskService    *service.TaskService
+	userService       *service.UserService
+	classService      *service.ClassService
+	problemService    *service.ProblemService
+	answerService     *service.AnswerService
+	taskService       *service.TaskService
+	submissionService *service.SubmissionService
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 	problemService = service.NewProblemService(repo)
 	answerService = service.NewAnswerService(repo)
 	taskService = service.NewTaskService(repo)
+	submissionService = service.NewSubmissionService(repo)
 }
 
 func Serve() {
