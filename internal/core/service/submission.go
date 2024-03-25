@@ -25,3 +25,12 @@ func (ss *SubmissionService) CreateSubmission(submission *model.Submission) (int
 
 	return submissionID, nil
 }
+
+func (ss *SubmissionService) GetStudentSubmissions(studentID int64) ([]*model.SubmissionSummary, error) {
+	submissions, err := ss.repo.FindSubmissionsByStudentID(studentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get student submissions: %w", err)
+	}
+
+	return submissions, nil
+}

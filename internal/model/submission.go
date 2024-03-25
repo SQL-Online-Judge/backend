@@ -61,3 +61,28 @@ func NewSubmission(s *Submission) *Submission {
 		JudgerOutput: "",
 	}
 }
+
+type SubmissionSummary struct {
+	SubmissionID int64     `bson:"submissionID"`
+	SubmitTime   time.Time `bson:"submitTime"`
+	TaskID       int64     `bson:"taskID"`
+	TaskName     string    `bson:"taskName"`
+	ProblemID    int64     `bson:"problemID"`
+	ProblemTitle string    `bson:"problemTitle"`
+	DBName       string    `bson:"dbName"`
+	JudgeStatus  string    `bson:"judgeStatus"`
+	TimeCost     int32     `bson:"timeCost"`
+}
+
+type SubmissionDetail struct {
+	SubmissionID int64     `bson:"submissionID"`
+	SubmitTime   time.Time `bson:"submitTime"`
+	TaskID       int64     `bson:"taskID"`
+	TaskName     string    `bson:"taskName"`
+	ProblemID    int64     `bson:"problemID"`
+	ProblemTitle string    `bson:"problemTitle"`
+	DBName       string    `bson:"dbName"`
+	JudgeStatus  string    `bson:"judgeStatus"`
+	TimeCost     int32     `bson:"timeCost"`
+	SubmittedSQL string    `bson:"submittedSQL"`
+}

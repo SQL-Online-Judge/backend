@@ -84,4 +84,5 @@ type TaskRepository interface {
 
 type SubmissionRepository interface {
 	CreateSubmission(s *model.Submission) (int64, error)
+	FindSubmissionsByStudentID(studentID int64) ([]*model.SubmissionSummary, error)
 }

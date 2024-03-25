@@ -1212,3 +1212,54 @@ func (mr *MongoRepository) CreateSubmission(submission *model.Submission) (int64
 
 	return submission.SubmissionID, nil
 }
+
+func (mr *MongoRepository) FindSubmissionsByStudentID(studentID int64) ([]*model.SubmissionSummary, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{{Key: "submitterID", Value: studentID}}}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "task"},
+			{Key: "localField", Value: "taskID"},
+			{Key: "foreignField", Value: "taskID"},
+			{Key: "as", Value: "task"},
+		}}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "problem"},
+			{Key: "localField", Value: "problemID"},
+			{Key: "foreignField", Value: "problemID"},
+			{Key: "as", Value: "problem"},
+		}}},
+		{{Key: "$unwind", Value: "$task"}},
+		{{Key: "$unwind", Value: "$problem"}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 0},
+			{Key: "submissionID", Value: "$submissionID"},
+			{Key: "submitTime", Value: "$submitTime"},
+			{Key: "taskID", Value: "$taskID"},
+			{Key: "taskName", Value: "$task.taskName"},
+			{Key: "problemID", Value: "$problemID"},
+			{Key: "problemTitle", Value: "$problem.title"},
+			{Key: "dbName", Value: "$dbName"},
+			{Key: "judgeStatus", Value: "$judgeStatus"},
+			{Key: "timeCost", Value: "$timeCost"},
+		}}},
+	}
+
+	cursor, err := mr.getSubmissionCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		logger.Logger.Error("failed to aggregate", zap.Error(err))
+		return nil, fmt.Errorf("failed to aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var submissions []*model.SubmissionSummary
+	err = cursor.All(ctx, &submissions)
+	if err != nil {
+		logger.Logger.Error("failed to decode submissions", zap.Error(err))
+		return nil, fmt.Errorf("failed to decode submissions: %w", err)
+	}
+
+	return submissions, nil
+}
