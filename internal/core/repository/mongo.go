@@ -1263,3 +1263,39 @@ func (mr *MongoRepository) FindSubmissionsByStudentID(studentID int64) ([]*model
 
 	return submissions, nil
 }
+
+func (mr *MongoRepository) IsStudentSubmission(studentID, submissionID int64) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{Key: "submissionID", Value: submissionID},
+		{Key: "submitterID", Value: studentID},
+	}
+	count, err := mr.getSubmissionCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		logger.Logger.Error("failed to count documents", zap.Error(err))
+		return false
+	}
+
+	return count > 0
+}
+
+func (mr *MongoRepository) GetSubmittedSQL(submissionID int64) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "submissionID", Value: submissionID}}
+	option := options.FindOne().SetProjection(bson.D{
+		{Key: "submissionID", Value: 1},
+		{Key: "submittedSQL", Value: 1},
+	})
+	var submission model.SubmitedSQL
+	err := mr.getSubmissionCollection().FindOne(ctx, filter, option).Decode(&submission)
+	if err != nil {
+		logger.Logger.Error("failed to find submission by submissionID", zap.Int64("submissionID", submissionID), zap.Error(err))
+		return "", fmt.Errorf("failed to find submission by submissionID: %w", err)
+	}
+
+	return submission.SubmittedSQL, nil
+}

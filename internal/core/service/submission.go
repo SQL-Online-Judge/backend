@@ -7,6 +7,10 @@ import (
 	"github.com/SQL-Online-Judge/backend/internal/model"
 )
 
+var (
+	ErrSubmissionNotFound = fmt.Errorf("submission not found")
+)
+
 type SubmissionService struct {
 	repo repository.SubmissionRepository
 }
@@ -33,4 +37,21 @@ func (ss *SubmissionService) GetStudentSubmissions(studentID int64) ([]*model.Su
 	}
 
 	return submissions, nil
+}
+
+func (ss *SubmissionService) isStudentSubmission(studentID, submissionID int64) bool {
+	return ss.repo.IsStudentSubmission(studentID, submissionID)
+}
+
+func (ss *SubmissionService) GetStudentSubmittedSQL(studentID, submissionID int64) (string, error) {
+	if !ss.isStudentSubmission(studentID, submissionID) {
+		return "", fmt.Errorf("%w", ErrSubmissionNotFound)
+	}
+
+	sql, err := ss.repo.GetSubmittedSQL(submissionID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get student submitted SQL: %w", err)
+	}
+
+	return sql, nil
 }

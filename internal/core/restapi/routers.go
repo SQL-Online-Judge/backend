@@ -83,6 +83,7 @@ func NewRouter() *chi.Mux {
 			r.Post("/tasks/{taskID}/problems/{problemID}/submissions", createStudentSubmission)
 
 			r.Get("/submissions", getStudentSubmissions)
+			r.Get("/submissions/{submissionID}", getStudentSubmittedSQL)
 		})
 	})
 
