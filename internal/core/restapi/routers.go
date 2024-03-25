@@ -79,6 +79,7 @@ func NewRouter() *chi.Mux {
 			r.Use(checkRole("student"))
 			r.Get("/tasks", getStudentTasks)
 			r.Get("/tasks/{taskID}/problems", getStudentTaskProblems)
+			r.Get("/tasks/{taskID}/problems/{problemID}", getStudentTaskProblem)
 		})
 	})
 

@@ -13,6 +13,7 @@ import (
 )
 
 type getProblemResponse struct {
+	ProblemID   string         `json:"problemID,omitempty"`
 	Title       string         `json:"title,omitempty"`
 	Tags        []string       `json:"tags,omitempty"`
 	Content     string         `json:"content,omitempty"`
@@ -45,6 +46,7 @@ func getProblem(w http.ResponseWriter, r *http.Request) {
 
 	problem, err := problemService.GetProblem(problemID)
 	if err == nil {
+		resp.ProblemID = sProblemID
 		resp.Title = problem.Title
 		resp.Tags = problem.Tags
 		resp.Content = problem.Content

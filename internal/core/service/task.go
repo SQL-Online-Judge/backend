@@ -259,3 +259,20 @@ func (ts *TaskService) GetStudentTaskProblems(us *UserService, studentID, taskID
 
 	return taskProblems, problems, nil
 }
+
+func (ts *TaskService) GetStudentTaskProblem(us *UserService, ps *ProblemService, studentID, taskID, problemID int64) (*model.Problem, error) {
+	if err := ts.canStudentAccessTask(us, studentID, taskID); err != nil {
+		return nil, err
+	}
+
+	if !ts.isTaskProblem(taskID, problemID) {
+		return nil, fmt.Errorf("%w", ErrTaskProblemNotFound)
+	}
+
+	problem, err := ps.GetProblem(problemID)
+	if err != nil {
+		return nil, err
+	}
+
+	return problem, nil
+}
