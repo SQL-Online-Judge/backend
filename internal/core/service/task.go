@@ -247,12 +247,12 @@ func (ts *TaskService) GetStudentTaskProblems(us *UserService, studentID, taskID
 		return nil, nil, err
 	}
 
-	taskProblems, err := ts.repo.FindTaskProblemsByStudentIDAndTaskID(studentID, taskID)
+	taskProblems, err := ts.repo.FindTaskProblemsByTaskID(taskID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get student task problems: %w", err)
 	}
 
-	problems, err := ts.repo.FindProblemsInStudentTask(studentID, taskID)
+	problems, err := ts.repo.FindProblemsByTaskID(taskID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get problems in student task: %w", err)
 	}

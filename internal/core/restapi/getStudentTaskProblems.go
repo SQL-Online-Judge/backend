@@ -86,21 +86,22 @@ func getStudentTaskProblems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	problemMap := make(map[int64]*model.Problem)
-	for _, problem := range problems {
-		problemMap[problem.ProblemID] = problem
+	taskProblemMap := make(map[int64]*model.TaskProblem)
+	for _, taskProblem := range taskProblems {
+		taskProblemMap[taskProblem.ProblemID] = taskProblem
 	}
 
-	resp.Problems = make([]*studentTaskProblem, 0, len(taskProblems))
-	for _, taskProblem := range taskProblems {
-		problem, ok := problemMap[taskProblem.ProblemID]
+	resp.Problems = make([]*studentTaskProblem, 0, len(problems))
+	for _, problem := range problems {
+		taskProblem, ok := taskProblemMap[problem.ProblemID]
 		if !ok {
-			logger.Logger.Error("failed to get problem by problem id",
+			logger.Logger.Error("task problem not found",
 				zap.String("requestID", requestID),
-				zap.Int64("problemID", taskProblem.ProblemID),
+				zap.Int64("taskID", taskID),
+				zap.Int64("problemID", problem.ProblemID),
 			)
 			w.WriteHeader(http.StatusInternalServerError)
-			resp.Error = &errorResponse{Code: http.StatusInternalServerError, Message: "failed to get problem by problem id"}
+			resp.Error = &errorResponse{Code: http.StatusInternalServerError, Message: "task problem not found"}
 			w.Write(resp.toJSON())
 			return
 		}
