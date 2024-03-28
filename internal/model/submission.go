@@ -36,7 +36,7 @@ func (s *Submission) IsValidSubmittedSQL() bool {
 
 func (s *Submission) IsValidJudgeStatus() bool {
 	switch s.JudgeStatus {
-	case "Pending", "Queued", "Judging", "Accepted", "Wrong Answer", "Time Limit Exceeded", "Runtime Error":
+	case "Pending", "Queued", "Judging", "Accepted", "Wrong Answer", "Time Limit Exceeded", "Runtime Error", "System Error":
 		return true
 	default:
 		return false
