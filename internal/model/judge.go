@@ -17,7 +17,7 @@ const (
 )
 
 type JudgeSubmission struct {
-	SubmissionID int64  `bson:"submissionID" json:"submissionID"`
+	SubmissionID string `bson:"submissionID" json:"submissionID"`
 	SubmittedSQL string `bson:"submittedSQL" json:"submittedSQL"`
 }
 
@@ -31,6 +31,7 @@ type JudgeAnswer struct {
 	PrepareSQL   string `bson:"prepareSQL" json:"prepareSQL"`
 	AnswerSQL    string `bson:"answerSQL" json:"answerSQL"`
 	JudgeSQL     string `bson:"judgeSQL" json:"judgeSQL"`
+	IsReady      bool   `bson:"isReady" json:"-"`
 	AnswerOutput string `bson:"answerOutput" json:"answerOutput"`
 }
 
@@ -47,7 +48,7 @@ type JudgeRequest struct {
 }
 
 type JudgeResponse struct {
-	SubmissionID int64        `json:"submissionID"`
+	SubmissionID string       `json:"submissionID"`
 	Result       *JudgeResult `json:"result"`
 }
 

@@ -5,6 +5,9 @@ import (
 
 	"github.com/SQL-Online-Judge/backend/internal/core/repository"
 	"github.com/SQL-Online-Judge/backend/internal/model"
+	"github.com/SQL-Online-Judge/backend/internal/pkg/logger"
+	"github.com/SQL-Online-Judge/backend/internal/pkg/mq"
+	"go.uber.org/zap"
 )
 
 var (
@@ -26,6 +29,33 @@ func (ss *SubmissionService) CreateSubmission(submission *model.Submission) (int
 	if err != nil {
 		return 0, fmt.Errorf("failed to create submission: %w", err)
 	}
+
+	go func() {
+		judgeRequest, err := ss.repo.GetJudgeRequest(submission)
+		if err != nil {
+			logger.Logger.Error("failed to get judge request", zap.Error(err))
+			return
+		}
+
+		if !judgeRequest.Answer.IsReady {
+			logger.Logger.Error("answer is not ready yet")
+			return
+		}
+
+		judgeRequestJSON, err := judgeRequest.ToJSON()
+		if err != nil {
+			logger.Logger.Error("failed to marshal judge request", zap.Error(err))
+			return
+		}
+
+		err = MQService.Enqueue(mq.QueueSubmission, judgeRequestJSON)
+		if err != nil {
+			logger.Logger.Error("failed to enqueue submission", zap.Error(err))
+			return
+		}
+
+		ss.repo.UpdateSubmissionStatus(submissionID, model.JudgeStatusQueued)
+	}()
 
 	return submissionID, nil
 }

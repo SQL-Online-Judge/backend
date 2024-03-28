@@ -83,4 +83,6 @@ type SubmissionRepository interface {
 	FindSubmissionsByStudentID(studentID int64) ([]*model.SubmissionSummary, error)
 	IsStudentSubmission(studentID, submission int64) bool
 	GetSubmittedSQL(submissionID int64) (string, error)
+	GetJudgeRequest(s *model.Submission) (*model.JudgeRequest, error)
+	UpdateSubmissionStatus(submissionID int64, status string) error
 }

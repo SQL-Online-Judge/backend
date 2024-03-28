@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/SQL-Online-Judge/backend/internal/model"
@@ -1298,4 +1299,65 @@ func (mr *MongoRepository) GetSubmittedSQL(submissionID int64) (string, error) {
 	}
 
 	return submission.SubmittedSQL, nil
+}
+
+func (mr *MongoRepository) GetJudgeRequest(s *model.Submission) (*model.JudgeRequest, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	judgeSubmission := model.JudgeSubmission{
+		SubmissionID: strconv.FormatInt(s.SubmissionID, 10),
+		SubmittedSQL: s.SubmittedSQL,
+	}
+
+	filter := bson.D{{Key: "problemID", Value: s.ProblemID}}
+	options := &options.FindOneOptions{
+		Projection: bson.D{
+			{Key: "timeLimit", Value: 1},
+			{Key: "memoryLimit", Value: 1},
+		},
+	}
+	var judgeProblem model.JudgeProblem
+	err := mr.getProblemCollection().FindOne(ctx, filter, options).Decode(&judgeProblem)
+	if err != nil {
+		logger.Logger.Error("failed to find problem by problemID", zap.Int64("problemID", s.ProblemID), zap.Error(err))
+		return nil, fmt.Errorf("failed to find problem by problemID: %w", err)
+	}
+
+	problemID := s.ProblemID
+	dbName := s.DBName
+	filter = bson.D{
+		{Key: "problemID", Value: problemID},
+		{Key: "dbName", Value: dbName},
+	}
+
+	var judgeAnswer model.JudgeAnswer
+	err = mr.getAnswerCollection().FindOne(ctx, filter).Decode(&judgeAnswer)
+	if err != nil {
+		logger.Logger.Error("failed to find answer by problemID and dbName", zap.Int64("problemID", problemID), zap.String("dbName", dbName), zap.Error(err))
+		return nil, fmt.Errorf("failed to find answer by problemID and dbName: %w", err)
+	}
+
+	judgeRequest := &model.JudgeRequest{
+		Submission: &judgeSubmission,
+		Problem:    &judgeProblem,
+		Answer:     &judgeAnswer,
+	}
+
+	return judgeRequest, nil
+}
+
+func (mr *MongoRepository) UpdateSubmissionStatus(submissionID int64, status string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "submissionID", Value: submissionID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "judgeStatus", Value: status}}}}
+	_, err := mr.getSubmissionCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.Logger.Error("failed to update submission status", zap.Int64("submissionID", submissionID), zap.Error(err))
+		return fmt.Errorf("failed to update submission status: %w", err)
+	}
+
+	return nil
 }
