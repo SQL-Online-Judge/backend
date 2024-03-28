@@ -1,4 +1,4 @@
-package db
+package mongo
 
 import (
 	"context"
@@ -15,24 +15,24 @@ import (
 	"go.uber.org/zap"
 )
 
-var Mongo *MongoDB
+var Mongo *DB
 var ErrMongoURINotSet = errors.New("MONGO_URI is not set")
 var ErrMongoClientNotConnected = errors.New("mongo client is not connected")
 
 func init() {
-	Mongo = &MongoDB{}
+	Mongo = &DB{}
 	err := Mongo.Connect(os.Getenv("MONGO_URI"))
 	if err != nil {
 		logger.Logger.Fatal("failed to connect to MongoDB during initialization", zap.Error(err))
 	}
 }
 
-type MongoDB struct {
+type DB struct {
 	client *mongo.Client
 	db     *mongo.Database
 }
 
-func (m *MongoDB) Connect(uri string) error {
+func (m *DB) Connect(uri string) error {
 	if uri == "" {
 		logger.Logger.Error(ErrMongoURINotSet.Error())
 		return fmt.Errorf("%w", ErrMongoURINotSet)
@@ -64,7 +64,7 @@ func (m *MongoDB) Connect(uri string) error {
 	return nil
 }
 
-func (m *MongoDB) Close() error {
+func (m *DB) Close() error {
 	if m.client == nil {
 		logger.Logger.Warn("mongo client is not connected")
 		return nil
@@ -80,7 +80,7 @@ func (m *MongoDB) Close() error {
 	return nil
 }
 
-func (m *MongoDB) Ping() error {
+func (m *DB) Ping() error {
 	if m.client == nil {
 		logger.Logger.Error(ErrMongoClientNotConnected.Error())
 		return fmt.Errorf("%w", ErrMongoClientNotConnected)
@@ -94,7 +94,7 @@ func (m *MongoDB) Ping() error {
 	return nil
 }
 
-func (m *MongoDB) getCollectionNumber() (int, error) {
+func (m *DB) getCollectionNumber() (int, error) {
 	if m.client == nil || m.db == nil {
 		logger.Logger.Error(ErrMongoClientNotConnected.Error())
 		return 0, fmt.Errorf("%w", ErrMongoClientNotConnected)
@@ -104,7 +104,7 @@ func (m *MongoDB) getCollectionNumber() (int, error) {
 	return len(collections), err
 }
 
-func (m *MongoDB) IsInitialized() (bool, error) {
+func (m *DB) IsInitialized() (bool, error) {
 	if m.client == nil || m.db == nil {
 		logger.Logger.Error(ErrMongoClientNotConnected.Error())
 		return false, fmt.Errorf("%w", ErrMongoClientNotConnected)
@@ -114,15 +114,15 @@ func (m *MongoDB) IsInitialized() (bool, error) {
 	return collectionNumber > 0, err
 }
 
-func (m *MongoDB) GetDB() *mongo.Database {
+func (m *DB) GetDB() *mongo.Database {
 	return m.db
 }
 
-func (m *MongoDB) GetCollection(name string) *mongo.Collection {
+func (m *DB) GetCollection(name string) *mongo.Collection {
 	return m.db.Collection(name)
 }
 
-func (m *MongoDB) CreateIndex(collectionName, fieldName string, unique bool) error {
+func (m *DB) CreateIndex(collectionName, fieldName string, unique bool) error {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.D{{Key: fieldName, Value: 1}},
 		Options: options.Index().SetUnique(unique),
@@ -140,7 +140,7 @@ func (m *MongoDB) CreateIndex(collectionName, fieldName string, unique bool) err
 	return nil
 }
 
-func GetMongo() *MongoDB {
+func GetMongo() *DB {
 	return Mongo
 }
 

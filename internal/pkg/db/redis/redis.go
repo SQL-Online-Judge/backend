@@ -1,4 +1,4 @@
-package db
+package redis
 
 import (
 	"context"
@@ -11,12 +11,12 @@ import (
 	"go.uber.org/zap"
 )
 
-var Redis *RedisDB
+var Redis *DB
 var ErrRedisURLNotSet = errors.New("REDIS_URL is not set")
 var ErrRedisClientNotConnected = errors.New("redis client is not connected")
 
 func init() {
-	Redis = &RedisDB{}
+	Redis = &DB{}
 
 	err := Redis.Connect(os.Getenv("REDIS_URL"))
 	if err != nil {
@@ -24,11 +24,11 @@ func init() {
 	}
 }
 
-type RedisDB struct {
+type DB struct {
 	client *redis.Client
 }
 
-func (r *RedisDB) Connect(url string) error {
+func (r *DB) Connect(url string) error {
 	if url == "" {
 		logger.Logger.Error(ErrRedisURLNotSet.Error())
 		return fmt.Errorf("%w", ErrRedisURLNotSet)
@@ -53,7 +53,7 @@ func (r *RedisDB) Connect(url string) error {
 	return nil
 }
 
-func (r *RedisDB) Close() error {
+func (r *DB) Close() error {
 	if r.client == nil {
 		logger.Logger.Warn(ErrRedisClientNotConnected.Error())
 		return nil
@@ -69,7 +69,7 @@ func (r *RedisDB) Close() error {
 	return nil
 }
 
-func (r *RedisDB) Ping() error {
+func (r *DB) Ping() error {
 	if r.client == nil {
 		logger.Logger.Error(ErrRedisClientNotConnected.Error())
 		return fmt.Errorf("%w", ErrRedisClientNotConnected)
@@ -85,7 +85,7 @@ func (r *RedisDB) Ping() error {
 	return nil
 }
 
-func GetRedis() *RedisDB {
+func GetRedis() *DB {
 	return Redis
 }
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/SQL-Online-Judge/backend/internal/core/repository"
 	"github.com/SQL-Online-Judge/backend/internal/core/service"
-	"github.com/SQL-Online-Judge/backend/internal/pkg/db"
+	"github.com/SQL-Online-Judge/backend/internal/pkg/db/mongo"
 	"github.com/go-chi/jwtauth/v5"
 )
 
@@ -25,7 +25,7 @@ var (
 
 func init() {
 	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
-	repo = repository.NewMongoRepository(db.GetMongoDB())
+	repo = repository.NewMongoRepository(mongo.GetMongoDB())
 
 	userService = service.NewUserService(repo)
 	classService = service.NewClassService(repo)

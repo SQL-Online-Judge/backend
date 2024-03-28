@@ -7,14 +7,14 @@ import (
 	"github.com/SQL-Online-Judge/backend/internal/core/repository"
 	"github.com/SQL-Online-Judge/backend/internal/core/service"
 	"github.com/SQL-Online-Judge/backend/internal/model"
-	"github.com/SQL-Online-Judge/backend/internal/pkg/db"
+	"github.com/SQL-Online-Judge/backend/internal/pkg/db/mongo"
 	"github.com/SQL-Online-Judge/backend/internal/pkg/id"
 	"github.com/SQL-Online-Judge/backend/internal/pkg/logger"
 	"go.uber.org/zap"
 )
 
 func Initialize() {
-	if hasInit, err := db.GetMongo().IsInitialized(); err != nil {
+	if hasInit, err := mongo.GetMongo().IsInitialized(); err != nil {
 		logger.Logger.Fatal("failed to check if MongoDB has been initialized", zap.Error(err))
 	} else if !hasInit {
 		initMongo()
@@ -55,7 +55,7 @@ func createIndex() {
 				logger.Logger.Fatal("failed to convert unique to bool", zap.Error(err))
 			}
 
-			err = db.GetMongo().CreateIndex(collection, indexMap["field"], unique)
+			err = mongo.GetMongo().CreateIndex(collection, indexMap["field"], unique)
 			if err != nil {
 				logger.Logger.Fatal("failed to create index in MongoDB", zap.Error(err))
 			}
@@ -78,7 +78,7 @@ func createAdmin() {
 		logger.Logger.Fatal("invalid admin, please check the environment variables")
 	}
 
-	_, err := service.NewUserService(repository.NewMongoRepository(db.GetMongoDB())).CreateUser(admin.Username, admin.Password, admin.Role)
+	_, err := service.NewUserService(repository.NewMongoRepository(mongo.GetMongoDB())).CreateUser(admin.Username, admin.Password, admin.Role)
 	if err != nil {
 		logger.Logger.Fatal("failed to create admin", zap.Error(err))
 	}
