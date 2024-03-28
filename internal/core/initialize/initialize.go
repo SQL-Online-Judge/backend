@@ -17,17 +17,19 @@ func Initialize() {
 	if hasInit, err := db.GetMongo().IsInitialized(); err != nil {
 		logger.Logger.Fatal("failed to check if MongoDB has been initialized", zap.Error(err))
 	} else if !hasInit {
-		logger.Logger.Info("initializing MongoDB...")
 		initMongo()
-		logger.Logger.Info("successfully initialized MongoDB")
 	} else {
 		logger.Logger.Info("MongoDB has been initialized")
 	}
+
+	initRedis()
 }
 
 func initMongo() {
+	logger.Logger.Info("initializing MongoDB...")
 	createIndex()
 	createAdmin()
+	logger.Logger.Info("successfully initialized MongoDB")
 }
 
 func createIndex() {
@@ -82,4 +84,32 @@ func createAdmin() {
 	}
 
 	logger.Logger.Info("successfully created admin")
+}
+
+func initRedis() {
+	logger.Logger.Info("initializing Redis...")
+	initRedisMQ()
+	logger.Logger.Info("successfully initialized Redis")
+}
+
+func initRedisMQ() {
+	queues := []string{"answer_generate", "answer_output", "submission", "judge_result"}
+
+	for _, queue := range queues {
+		exists, err := service.MQService.IsQueueExists(queue)
+		if err != nil {
+			logger.Logger.Fatal("failed to check if queue exists", zap.Error(err))
+		}
+
+		if exists {
+			continue
+		}
+
+		err = service.MQService.CreateQueue(queue)
+		if err != nil {
+			logger.Logger.Fatal("failed to create queue", zap.Error(err))
+		}
+
+		logger.Logger.Info("successfully created queue", zap.String("queue", queue))
+	}
 }

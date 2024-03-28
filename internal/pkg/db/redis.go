@@ -88,3 +88,7 @@ func (r *RedisDB) Ping() error {
 func GetRedis() *RedisDB {
 	return Redis
 }
+
+func GetRedisDB() *redis.Client {
+	return Redis.client
+}
